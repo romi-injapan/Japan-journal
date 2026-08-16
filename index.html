@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Romi in Japan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&family=Special+Elite&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="lib/leaflet.css" />
 <style>
   :root{
@@ -28,13 +28,18 @@
     font-family:'Work Sans', sans-serif;
     background-image:
       radial-gradient(circle at 15% 8%, rgba(47,86,115,0.05), transparent 40%),
-      radial-gradient(circle at 85% 92%, rgba(201,123,74,0.06), transparent 45%);
+      radial-gradient(circle at 85% 92%, rgba(201,123,74,0.06), transparent 45%),
+      radial-gradient(circle at 50% 100%, transparent 20%, rgba(38,49,61,0.032) 21%, rgba(38,49,61,0.032) 24%, transparent 25%, transparent 40%, rgba(38,49,61,0.032) 41%, rgba(38,49,61,0.032) 44%, transparent 45%, transparent),
+      radial-gradient(circle at 0% 100%, transparent 20%, rgba(38,49,61,0.032) 21%, rgba(38,49,61,0.032) 24%, transparent 25%, transparent 40%, rgba(38,49,61,0.032) 41%, rgba(38,49,61,0.032) 44%, transparent 45%, transparent);
+    background-size: auto, auto, 64px 32px, 64px 32px;
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+    background-attachment: fixed, fixed, fixed, fixed;
   }
   a{color:inherit;}
 
   /* ---------- gate ---------- */
   #gate{
-    position:fixed; inset:0; background:var(--paper); z-index:200;
+    position:fixed; inset:0; background:var(--paper); z-index:6000;
     display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;
   }
   #gate .stamp-mark{ width:70px; height:70px; opacity:0.85; }
@@ -74,6 +79,21 @@
     width:56px; height:1px; background:var(--persimmon); margin:26px auto 0;
   }
 
+  .widgets{ display:flex; justify-content:center; gap:16px; margin-top:28px; flex-wrap:wrap; }
+  .widget{
+    border-radius:16px; padding:18px 26px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    box-shadow:0 4px 14px rgba(30,58,79,0.08); min-width:120px;
+  }
+  .widget-weather{ background:#E1EEF6; }
+  .widget-clock{ background:#F7E2E6; }
+  .widget-countdown{ background:#FBF0D0; }
+  .clock-face{ width:56px; height:56px; }
+  .icon-box{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; }
+  .widget-icon{ font-size:30px; line-height:1; }
+  .widget-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700; }
+  .widget-value{ font-family:'Instrument Serif', serif; font-style:italic; font-size:24px; color:var(--indigo-deep); }
+  .widget-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:-4px; }
+
   /* ---------- nav ---------- */
   nav.viewswitch{
     display:flex; justify-content:center; gap:8px; margin:0 0 36px;
@@ -85,7 +105,7 @@
   }
   nav.viewswitch button.active{ background:var(--indigo-deep); color:#fff; border-color:var(--indigo-deep); }
 
-  .wrap{ max-width:980px; margin:0 auto; padding:0 24px 100px; }
+  .wrap{ max-width:1400px; margin:0 auto; padding:0 24px 100px; }
 
   /* ---------- map view ---------- */
   #mapView{ display:block; }
@@ -120,21 +140,21 @@
     position:absolute; top:20px; right:24px; width:54px; height:54px; opacity:0.9;
   }
   .entry-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:17px; margin:0 0 4px; }
-  .entry-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:28px; color:var(--indigo-deep); margin:0 0 8px; max-width:80%; }
+  .entry-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:28px; color:var(--indigo-deep); margin:0 0 8px; max-width:90%; }
   .entry-tag{
     display:inline-block; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
     color:var(--moss); border:1px solid var(--moss); border-radius:999px; padding:3px 10px; margin-bottom:12px;
   }
-  .entry-excerpt{ font-size:14.5px; line-height:1.7; color:var(--ink); max-width:78%; }
+  .entry-excerpt{ font-size:14.5px; line-height:1.7; color:var(--ink); max-width:86%; }
 
   /* ---------- entry detail overlay ---------- */
   #entryOverlay{
     position:fixed; inset:0; background:rgba(38,49,61,0.5); backdrop-filter:blur(2px);
-    display:none; align-items:flex-start; justify-content:center; z-index:150; padding:40px 16px; overflow-y:auto;
+    display:none; align-items:flex-start; justify-content:center; z-index:5000; padding:40px 16px; overflow-y:auto;
   }
   #entryOverlay.show{ display:flex; }
   .entry-detail{
-    background:var(--card); max-width:640px; width:100%; border-radius:10px; padding:44px 40px 40px;
+    background:var(--card); max-width:760px; width:100%; border-radius:10px; padding:44px 40px 40px;
     position:relative; box-shadow:0 20px 60px rgba(20,30,40,0.25);
   }
   .entry-detail .close{
@@ -151,6 +171,7 @@
   .entry-body h4{ font-family:'Work Sans'; font-weight:700; color:var(--persimmon); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:20px 0 6px; }
   .entry-body strong{ color:var(--indigo-deep); font-weight:700; }
   .entry-body em{ color:var(--ink-soft); }
+  .entry-body img{ max-width:100%; border-radius:8px; margin:14px 0; display:block; box-shadow:0 4px 16px rgba(30,58,79,0.12); }
   .entry-links{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
   .entry-links a{
     font-size:14px; color:var(--indigo); text-decoration:none; font-weight:600;
@@ -195,6 +216,38 @@
     <h1>Romi in Japan</h1>
     <p class="sub">April 2027 — a year and a half in Nagoya, told one stamp at a time. Click a mark on the map, or scroll through everything below.</p>
     <div class="divider"></div>
+    <div class="widgets">
+      <div class="widget widget-clock">
+        <svg class="clock-face" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#1E3A4F" stroke-width="2" opacity="0.35"/>
+          <line x1="50" y1="10" x2="50" y2="16" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
+          <line x1="50" y1="90" x2="50" y2="84" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
+          <line x1="10" y1="50" x2="16" y2="50" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
+          <line x1="90" y1="50" x2="84" y2="50" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
+          <line id="jstHour" x1="50" y1="50" x2="50" y2="30" stroke="#1E3A4F" stroke-width="3.5" stroke-linecap="round"/>
+          <line id="jstMinute" x1="50" y1="50" x2="50" y2="18" stroke="#1E3A4F" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="3" fill="#1E3A4F"/>
+        </svg>
+        <span class="widget-label">Japan time</span>
+        <span class="widget-value" id="jstClock">--:--</span>
+      </div>
+      <div class="widget widget-weather">
+        <div class="icon-box"><span class="widget-icon" id="weatherIcon">🌤️</span></div>
+        <span class="widget-label">Nagoya</span>
+        <span class="widget-value" id="weatherTemp">--°</span>
+      </div>
+      <div class="widget widget-countdown">
+        <svg class="clock-face" viewBox="0 0 100 100">
+          <line x1="20" y1="30" x2="20" y2="85" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
+          <line x1="80" y1="30" x2="80" y2="85" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
+          <line x1="10" y1="35" x2="90" y2="35" stroke="#7C8B6E" stroke-width="5" stroke-linecap="round"/>
+          <line x1="15" y1="22" x2="85" y2="22" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="35" x2="50" y2="60" stroke="#7C8B6E" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        </svg>
+        <span class="widget-label" id="countdownLabel">until Japan</span>
+        <span class="widget-value" id="countdownValue">--</span>
+      </div>
+    </div>
   </header>
 
   <nav class="viewswitch">
@@ -238,7 +291,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let ENTRIES = [];
 
 async function loadEntries(){
-  const { data, error } = await sb.from('entries').select('*').order('entry_date', { ascending: false });
+  const { data, error } = await sb.from('entries').select('*').order('entry_date', { ascending: true });
   if(error){
     console.error('Could not load entries:', error);
     document.getElementById('timelineView').innerHTML = `<p style="text-align:center;color:var(--ink-soft);">couldn't load entries — check the console for details</p>`;
@@ -285,7 +338,16 @@ function showView(v){
 
 /* ---------------- stamp svg (reused per entry) ---------------- */
 function stampSvg(){
-  return `<svg class="stamp" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#B23A2E" stroke-width="2.5" opacity="0.75"/><circle cx="50" cy="50" r="36" fill="none" stroke="#B23A2E" stroke-width="1" opacity="0.5"/></svg>`;
+  const petal = `<path d="M50,50 C38,32 40,10 46,10 L50,16 L54,10 C60,10 62,32 50,50 Z" fill="#B23A2E" opacity="0.85"/>`;
+  let petals = '';
+  for(let i=0;i<5;i++){
+    petals += `<g transform="rotate(${i*72} 50 50)">${petal}</g>`;
+  }
+  return `<svg class="stamp" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#B23A2E" stroke-width="1.5" opacity="0.4"/>
+    ${petals}
+    <circle cx="50" cy="50" r="4" fill="#B23A2E"/>
+  </svg>`;
 }
 
 /* ---------------- render timeline ---------------- */
@@ -343,7 +405,7 @@ function addMarkers(){
 
   const stampIcon = L.divIcon({
     className: '',
-    html: `<div style="width:34px;height:34px;border-radius:50%;background:#FBF9F4;border:2.5px solid #B23A2E;box-shadow:0 3px 8px rgba(30,58,79,0.25);"></div>`,
+    html: `<div style="width:34px;height:34px;border-radius:50%;background:#FBF9F4;border:1.5px solid #B23A2E;box-shadow:0 3px 8px rgba(30,58,79,0.25);display:flex;align-items:center;justify-content:center;">${stampSvg().replace('class="stamp"', 'style="width:26px;height:26px;"')}</div>`,
     iconSize: [34,34], iconAnchor: [17,17]
   });
 
@@ -360,6 +422,91 @@ function addMarkers(){
 }
 
 // entries load automatically after a successful login — see tryEnter() above
+
+/* ---------------- clocks ---------------- */
+function getTimeInZone(tz){
+  const parts = new Intl.DateTimeFormat('en-GB', {timeZone:tz, hour:'2-digit', minute:'2-digit', hour12:false}).formatToParts(new Date());
+  const h = parseInt(parts.find(p=>p.type==='hour').value, 10) % 24;
+  const m = parseInt(parts.find(p=>p.type==='minute').value, 10);
+  return {h, m};
+}
+function setHand(id, deg){
+  document.getElementById(id).setAttribute('transform', `rotate(${deg} 50 50)`);
+}
+function updateClocks(){
+  const jst = getTimeInZone('Asia/Tokyo');
+  setHand('jstHour', (jst.h % 12 + jst.m/60) * 30);
+  setHand('jstMinute', jst.m * 6);
+  document.getElementById('jstClock').textContent = String(jst.h).padStart(2,'0')+':'+String(jst.m).padStart(2,'0');
+}
+updateClocks();
+setInterval(updateClocks, 1000);
+
+/* ---------------- weather (Nagoya, via Open-Meteo — free, no API key needed) ---------------- */
+function weatherCodeInfo(code){
+  if(code===0) return {icon:'☀️'};
+  if(code===1 || code===2) return {icon:'🌤️'};
+  if(code===3) return {icon:'☁️'};
+  if(code===45 || code===48) return {icon:'🌫️'};
+  if(code>=51 && code<=67) return {icon:'🌧️'};
+  if(code>=71 && code<=77) return {icon:'🌨️'};
+  if(code>=80 && code<=82) return {icon:'🌦️'};
+  if(code>=95) return {icon:'⛈️'};
+  return {icon:'🌥️'};
+}
+async function loadWeather(){
+  try{
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.18&longitude=136.91&current_weather=true');
+    const data = await res.json();
+    const temp = Math.round(data.current_weather.temperature);
+    const info = weatherCodeInfo(data.current_weather.weathercode);
+    document.getElementById('weatherIcon').textContent = info.icon;
+    document.getElementById('weatherTemp').textContent = `${temp}°`;
+  }catch(e){ /* weather is a nice-to-have — fail quietly if it doesn't load */ }
+}
+loadWeather();
+setInterval(loadWeather, 30*60*1000);
+
+/* ---------------- countdown ---------------- */
+const TRIP_START = new Date('2027-04-12T00:00:00+09:00');
+const TRIP_END = new Date('2028-09-29T23:59:59+09:00');
+
+function updateCountdown(){
+  const now = new Date();
+  const labelEl = document.getElementById('countdownLabel');
+  const valueEl = document.getElementById('countdownValue');
+  let target;
+
+  if(now < TRIP_START){
+    target = TRIP_START;
+    labelEl.textContent = 'until Japan';
+  } else if(now < TRIP_END){
+    target = TRIP_END;
+    labelEl.textContent = 'left in Japan';
+  } else {
+    labelEl.textContent = '';
+    valueEl.textContent = 'the trip is over 🌸';
+    return;
+  }
+
+  const diffMs = target - now;
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+
+  if(days >= 60){
+    const months = Math.floor(days / 30);
+    const remDays = days % 30;
+    valueEl.textContent = `${months}mo ${remDays}d`;
+  } else if(days >= 1){
+    valueEl.textContent = `${days}d ${hours}h`;
+  } else {
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    valueEl.textContent = `${hours}h ${mins}m`;
+  }
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
 </script>
 
 </body>

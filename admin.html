@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Romi in Japan — Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EFE7; --card:#FBF9F4; --ink:#26313D; --ink-soft:#6B7580;
+    --indigo:#2F5673; --indigo-deep:#1E3A4F; --persimmon:#C97B4A; --moss:#7C8B6E;
+    --line:#DCD6C8; --stamp-red:#B23A2E; --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Work Sans', sans-serif; }
+  h1,h2{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; color:var(--indigo-deep); }
+  a{ color:var(--indigo); }
+  label{ display:block; font-weight:600; font-size:12.5px; color:var(--ink-soft); margin:18px 0 6px; text-transform:uppercase; letter-spacing:.04em; }
+  input[type=text], input[type=date], input[type=number], input[type=email], input[type=password], textarea{
+    width:100%; font-family:'Work Sans'; font-size:14.5px; padding:10px 12px; border:1.5px solid var(--line);
+    border-radius:var(--radius); background:#fff; color:var(--ink);
+  }
+  textarea{ resize:vertical; }
+  button{
+    font-family:'Work Sans'; font-weight:600; font-size:13.5px; padding:9px 18px; border:none;
+    border-radius:999px; cursor:pointer; letter-spacing:.02em;
+  }
+  .btn-primary{ background:var(--indigo-deep); color:#fff; }
+  .btn-primary:hover{ background:var(--indigo); }
+  .btn-secondary{ background:var(--card); color:var(--ink); border:1.5px solid var(--line); }
+  .btn-danger{ background:#fff; color:var(--stamp-red); border:1.5px solid var(--stamp-red); }
+  .btn-small{ padding:6px 12px; font-size:12.5px; }
+
+  /* ---- gate ---- */
+  #gate{ min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; }
+  #gate h1{ font-size:30px; margin:0; }
+  #gate input{ width:260px; }
+  #gate .err{ color:var(--stamp-red); font-size:13px; height:16px; }
+  #adminSite{ display:none; max-width:760px; margin:0 auto; padding:40px 24px 100px; }
+  #adminSite.show{ display:block; }
+
+  .entry-row{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 20px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
+  }
+  .entry-row .meta{ font-size:12.5px; color:var(--ink-soft); }
+  .entry-row .title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; color:var(--indigo-deep); }
+  .entry-row .actions{ display:flex; gap:8px; }
+
+  /* ---- form ---- */
+  #entryForm{ display:none; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:30px; margin-top:20px; }
+  #entryForm.show{ display:block; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .toolbar{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .toolbar button{ background:#fff; border:1.5px solid var(--line); padding:7px 12px; border-radius:6px; font-weight:700; }
+  .toolbar button:hover{ background:var(--paper); }
+  #bodyEditor{
+    min-height:220px; border:1.5px solid var(--line); border-radius:var(--radius); background:#fff;
+    padding:14px 16px; font-size:14.5px; line-height:1.7; color:var(--ink); overflow-y:auto;
+  }
+  #bodyEditor:focus{ outline:none; border-color:var(--indigo); }
+  #bodyEditor h3{ font-family:'Instrument Serif', serif; font-style:italic; color:var(--indigo-deep); }
+  #bodyEditor h4{ font-family:'Work Sans'; font-weight:700; color:var(--persimmon); text-transform:uppercase; font-size:12px; letter-spacing:.05em; }
+  #bodyEditor img{ max-width:100%; border-radius:6px; margin:10px 0; display:block; }
+
+  .link-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .link-row input{ flex:1; }
+
+  #saveStatus{ font-size:13px; color:var(--moss); height:18px; margin-top:10px; }
+  #saveStatus.error{ color:var(--stamp-red); }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>Editor login</h1>
+  <p style="color:var(--ink-soft);font-size:13.5px;">this page is just for you</p>
+  <input type="email" id="adminEmail" placeholder="your email">
+  <input type="password" id="adminPw" placeholder="password">
+  <div class="err" id="adminErr"></div>
+  <button class="btn-primary" onclick="adminLogin()">Log in</button>
+</div>
+
+<div id="adminSite">
+  <h1 style="font-size:32px;">Your entries</h1>
+  <button class="btn-primary" onclick="openForm()">+ New entry</button>
+
+  <div id="entryList" style="margin-top:24px;"></div>
+
+  <div id="entryForm">
+    <h2 id="formTitle" style="font-size:22px;">New entry</h2>
+
+    <label>Title</label>
+    <input type="text" id="f_title">
+
+    <div class="row2">
+      <div><label>Date</label><input type="date" id="f_date"></div>
+      <div><label>Tag</label><input type="text" id="f_tag" placeholder="e.g. tokyo"></div>
+    </div>
+
+    <label>Location preset (fills in the map coordinates)</label>
+    <select id="f_preset" onchange="applyPreset()" style="width:100%;padding:10px;border-radius:6px;border:1.5px solid var(--line);font-family:'Work Sans';font-size:14.5px;">
+      <option value="">— custom / pick manually below —</option>
+      <option value="tokyo">Tokyo</option>
+      <option value="osaka">Osaka</option>
+      <option value="kyoto">Kyoto</option>
+      <option value="nagoya">Nagoya</option>
+    </select>
+    <div class="row2">
+      <div><label>Latitude</label><input type="number" step="any" id="f_lat"></div>
+      <div><label>Longitude</label><input type="number" step="any" id="f_lng"></div>
+    </div>
+
+    <label>Excerpt (short teaser)</label>
+    <textarea id="f_excerpt" rows="2"></textarea>
+
+    <label>Body</label>
+    <div class="toolbar">
+      <button onclick="fmt('bold')" title="Bold"><b>B</b></button>
+      <button onclick="fmt('italic')" title="Italic"><i>I</i></button>
+      <button onclick="fmt('formatBlock','H3')">Title</button>
+      <button onclick="fmt('formatBlock','H4')">Subtitle</button>
+      <button onclick="fmt('formatBlock','P')">Normal text</button>
+      <button onclick="document.getElementById('imgPicker').click()">🖼️ Insert image</button>
+    </div>
+    <div class="toolbar">
+      <select onchange="applyFont(this.value); this.selectedIndex=0;" style="border:1.5px solid var(--line);border-radius:6px;padding:7px 10px;font-family:'Work Sans';">
+        <option value="">Font...</option>
+        <option value="Work Sans" style="font-family:'Work Sans';">Work Sans (default)</option>
+        <option value="Instrument Serif" style="font-family:'Instrument Serif';">Instrument Serif</option>
+        <option value="Shadows Into Light" style="font-family:'Shadows Into Light';">Shadows Into Light</option>
+        <option value="Special Elite" style="font-family:'Special Elite';">Special Elite (typewriter)</option>
+      </select>
+      <button onclick="fmt('foreColor','#1E3A4F')" style="background:#1E3A4F;width:28px;padding:0;" title="Indigo"></button>
+      <button onclick="fmt('foreColor','#C97B4A')" style="background:#C97B4A;width:28px;padding:0;" title="Persimmon"></button>
+      <button onclick="fmt('foreColor','#7C8B6E')" style="background:#7C8B6E;width:28px;padding:0;" title="Moss"></button>
+      <button onclick="fmt('foreColor','#B23A2E')" style="background:#B23A2E;width:28px;padding:0;" title="Stamp red"></button>
+      <button onclick="fmt('foreColor','#26313D')" style="background:#26313D;width:28px;padding:0;" title="Ink (default)"></button>
+      <input type="color" id="customColor" onchange="applyColorDelayed(this.value)" style="width:34px;height:34px;padding:2px;border:1.5px solid var(--line);border-radius:6px;cursor:pointer;" title="Custom color">
+    </div>
+    <div id="bodyEditor" contenteditable="true"></div>
+    <input type="file" id="imgPicker" accept="image/*" style="display:none;" onchange="insertImage(event)">
+    <div id="uploadStatus" style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;"></div>
+
+    <label>Links (restaurants, places — optional)</label>
+    <div id="linksWrap"></div>
+    <button class="btn-secondary btn-small" onclick="addLinkRow()">+ Add link</button>
+
+    <label>Google Photos album link</label>
+    <input type="text" id="f_photos" placeholder="https://photos.app.goo.gl/...">
+
+    <div style="margin-top:26px;display:flex;gap:10px;">
+      <button class="btn-primary" onclick="saveEntry()">Save entry</button>
+      <button class="btn-secondary" onclick="closeForm()">Cancel</button>
+      <button class="btn-danger" id="deleteBtn" style="display:none;" onclick="deleteEntry()">Delete entry</button>
+    </div>
+    <div id="saveStatus"></div>
+  </div>
+</div>
+
+<script src="lib/supabase.js"></script>
+<script>
+const SUPABASE_URL = "https://fwtekzwtikmuvxqddsdj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_9r0cZSeuGM34Dhy-sgCI5g_U8qukQ9N";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const PRESETS = {
+  tokyo:  {lat:35.6762, lng:139.6503},
+  osaka:  {lat:34.6937, lng:135.5023},
+  kyoto:  {lat:35.0116, lng:135.7681},
+  nagoya: {lat:35.1815, lng:136.9066},
+};
+
+let editingId = null;
+let allEntries = [];
+
+/* ---------------- login ---------------- */
+async function adminLogin(){
+  const email = document.getElementById('adminEmail').value;
+  const password = document.getElementById('adminPw').value;
+  document.getElementById('adminErr').textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){
+    document.getElementById('adminErr').textContent = "couldn't log in — check your email and password";
+    return;
+  }
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('adminSite').classList.add('show');
+  loadList();
+}
+
+/* ---------------- list entries ---------------- */
+async function loadList(){
+  const { data, error } = await sb.from('entries').select('*').order('entry_date', { ascending: false });
+  const el = document.getElementById('entryList');
+  if(error){ el.innerHTML = `<p>couldn't load entries: ${error.message}</p>`; return; }
+  allEntries = data;
+  if(!data.length){ el.innerHTML = `<p style="color:var(--ink-soft);">no entries yet — click "+ New entry" to write your first one.</p>`; return; }
+  el.innerHTML = data.map(e => `
+    <div class="entry-row">
+      <div>
+        <div class="meta">${e.entry_date} · ${e.tag||''}</div>
+        <div class="title">${e.title}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary btn-small" onclick="editEntry('${e.id}')">Edit</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- form open/close ---------------- */
+function openForm(){
+  editingId = null;
+  document.getElementById('formTitle').textContent = "New entry";
+  document.getElementById('deleteBtn').style.display = 'none';
+  ['f_title','f_date','f_tag','f_lat','f_lng','f_excerpt','f_photos'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('bodyEditor').innerHTML = '';
+  document.getElementById('linksWrap').innerHTML = '';
+  document.getElementById('saveStatus').textContent = '';
+  document.getElementById('entryForm').classList.add('show');
+  window.scrollTo({top: document.getElementById('entryForm').offsetTop - 20, behavior:'smooth'});
+}
+function closeForm(){
+  document.getElementById('entryForm').classList.remove('show');
+}
+function editEntry(id){
+  const e = allEntries.find(x => x.id === id);
+  if(!e) return;
+  editingId = e.id;
+  document.getElementById('formTitle').textContent = "Edit entry";
+  document.getElementById('deleteBtn').style.display = 'inline-block';
+  document.getElementById('f_title').value = e.title || '';
+  document.getElementById('f_date').value = e.entry_date || '';
+  document.getElementById('f_tag').value = e.tag || '';
+  document.getElementById('f_lat').value = e.lat ?? '';
+  document.getElementById('f_lng').value = e.lng ?? '';
+  document.getElementById('f_excerpt').value = e.excerpt || '';
+  document.getElementById('f_photos').value = e.photos_url || '';
+  document.getElementById('bodyEditor').innerHTML = e.body || '';
+  document.getElementById('linksWrap').innerHTML = '';
+  (e.links||[]).forEach(l => addLinkRow(l.label, l.url));
+  document.getElementById('saveStatus').textContent = '';
+  document.getElementById('entryForm').classList.add('show');
+  window.scrollTo({top: document.getElementById('entryForm').offsetTop - 20, behavior:'smooth'});
+}
+function applyPreset(){
+  const p = PRESETS[document.getElementById('f_preset').value];
+  if(p){ document.getElementById('f_lat').value = p.lat; document.getElementById('f_lng').value = p.lng; }
+}
+
+/* ---------------- rich text toolbar ---------------- */
+let savedRange = null;
+const bodyEditorEl = document.getElementById('bodyEditor');
+try{ document.execCommand('defaultParagraphSeparator', false, 'p'); }catch(e){}
+bodyEditorEl.addEventListener('mouseup', saveSelection);
+bodyEditorEl.addEventListener('keyup', saveSelection);
+
+function saveSelection(){
+  const sel = window.getSelection();
+  if(sel.rangeCount > 0 && bodyEditorEl.contains(sel.anchorNode)){
+    savedRange = sel.getRangeAt(0).cloneRange();
+  }
+}
+function restoreSelection(){
+  if(savedRange){
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+}
+function fmt(cmd, val){
+  bodyEditorEl.focus();
+  restoreSelection();
+  const ok = document.execCommand(cmd, false, val || null);
+  if(!ok && cmd === 'formatBlock' && val){
+    // some browsers want the tag wrapped in angle brackets for this specific command
+    document.execCommand(cmd, false, '<'+val+'>');
+  }
+  saveSelection();
+}
+function applyColorDelayed(color){
+  // the native color dialog steals focus more aggressively than a simple click —
+  // a short pause lets the browser settle before we try to apply the color
+  setTimeout(()=>{ fmt('foreColor', color); }, 50);
+}
+function applyFont(fontName){
+  // uses a real inline style rather than the old <font> tag, so it reliably
+  // overrides the site's own styling wherever the entry is displayed later
+  if(!savedRange){ alert('Select some text first, then choose a font.'); return; }
+  bodyEditorEl.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+  const span = document.createElement('span');
+  span.style.fontFamily = `'${fontName}', sans-serif`;
+  try{
+    savedRange.surroundContents(span);
+    sel.removeAllRanges();
+  }catch(e){
+    // selection crosses multiple elements — fall back to the simpler method
+    document.execCommand('fontName', false, fontName);
+  }
+  saveSelection();
+}
+
+/* ---------------- links ---------------- */
+function addLinkRow(label='', url=''){
+  const wrap = document.getElementById('linksWrap');
+  const row = document.createElement('div');
+  row.className = 'link-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Place name" class="link-label" value="${label.replace(/"/g,'&quot;')}">
+    <input type="text" placeholder="https://..." class="link-url" value="${url.replace(/"/g,'&quot;')}">
+    <button class="btn-secondary btn-small" onclick="this.parentElement.remove()">✕</button>
+  `;
+  wrap.appendChild(row);
+}
+
+/* ---------------- image upload ---------------- */
+function compressImage(file, maxWidth=1200, quality=0.82){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function insertImage(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.textContent = "uploading...";
+  try{
+    const blob = await compressImage(file);
+    const path = `entry-images/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error: upErr } = await sb.storage.from('entry-images').upload(path, blob, { contentType: 'image/jpeg' });
+    if(upErr) throw upErr;
+    const { data } = sb.storage.from('entry-images').getPublicUrl(path);
+    document.getElementById('bodyEditor').focus();
+    document.execCommand('insertImage', false, data.publicUrl);
+    statusEl.textContent = "image added ✓";
+    setTimeout(()=>statusEl.textContent='', 2000);
+  }catch(err){
+    statusEl.textContent = "upload failed: " + err.message;
+  }
+  event.target.value = '';
+}
+
+/* ---------------- clean up stray empty formatting before saving ---------------- */
+function cleanBodyHtml(html){
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  function isEmpty(el){
+    const text = el.textContent.replace(/\u00A0/g, '').trim();
+    return text === '' && !el.querySelector('img');
+  }
+  let changed = true;
+  while(changed){
+    changed = false;
+    temp.querySelectorAll('p, div, span, font, strong, em, b, i').forEach(el => {
+      if(isEmpty(el)){ el.remove(); changed = true; }
+    });
+  }
+  return temp.innerHTML;
+}
+
+/* ---------------- save / delete ---------------- */
+async function saveEntry(){
+  const status = document.getElementById('saveStatus');
+  status.className = ''; status.textContent = "saving...";
+
+  const links = [...document.querySelectorAll('.link-row')].map(row => ({
+    label: row.querySelector('.link-label').value,
+    url: row.querySelector('.link-url').value
+  })).filter(l => l.label && l.url);
+
+  const payload = {
+    title: document.getElementById('f_title').value,
+    entry_date: document.getElementById('f_date').value,
+    tag: document.getElementById('f_tag').value,
+    lat: document.getElementById('f_lat').value ? parseFloat(document.getElementById('f_lat').value) : null,
+    lng: document.getElementById('f_lng').value ? parseFloat(document.getElementById('f_lng').value) : null,
+    excerpt: document.getElementById('f_excerpt').value,
+    body: cleanBodyHtml(document.getElementById('bodyEditor').innerHTML),
+    links: links,
+    photos_url: document.getElementById('f_photos').value,
+  };
+
+  let error;
+  if(editingId){
+    ({ error } = await sb.from('entries').update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await sb.from('entries').insert(payload));
+  }
+
+  if(error){
+    status.className = 'error';
+    status.textContent = "couldn't save: " + error.message;
+    return;
+  }
+  status.textContent = "saved ✓";
+  loadList();
+  setTimeout(closeForm, 700);
+}
+
+async function deleteEntry(){
+  if(!editingId) return;
+  if(!confirm("Delete this entry for good?")) return;
+  const { error } = await sb.from('entries').delete().eq('id', editingId);
+  if(error){ document.getElementById('saveStatus').textContent = "couldn't delete: " + error.message; return; }
+  closeForm();
+  loadList();
+}
+</script>
+
+</body>
+</html>
