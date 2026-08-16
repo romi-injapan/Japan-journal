@@ -6,7 +6,7 @@
 <title>Romi in Japan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/[email protected]/dist/leaflet.css" />
+<link rel="stylesheet" href="lib/leaflet.css" />
 <style>
   :root{
     --paper:#F2EFE7;
@@ -147,6 +147,10 @@
   .entry-detail .entry-tag{ margin-bottom:20px; }
   .entry-body{ font-size:15.5px; line-height:1.85; color:var(--ink); white-space:pre-line; }
   .entry-body p{ margin:0 0 16px; }
+  .entry-body h3{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; color:var(--indigo-deep); font-size:23px; margin:26px 0 6px; }
+  .entry-body h4{ font-family:'Work Sans'; font-weight:700; color:var(--persimmon); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:20px 0 6px; }
+  .entry-body strong{ color:var(--indigo-deep); font-weight:700; }
+  .entry-body em{ color:var(--ink-soft); }
   .entry-links{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
   .entry-links a{
     font-size:14px; color:var(--indigo); text-decoration:none; font-weight:600;
@@ -214,8 +218,8 @@
   <div class="entry-detail" id="entryDetailContent"></div>
 </div>
 
-<script src="https://unpkg.com/[email protected]/dist/umd/supabase.js"></script>
-<script src="https://unpkg.com/[email protected]/dist/leaflet.js"></script>
+<script src="lib/supabase.js"></script>
+<script src="lib/leaflet.js"></script>
 <script>
 /* ---------------- Supabase setup ----------------
    Paste your own values here, replacing the placeholder text.
