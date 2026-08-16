@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Romi in Japan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/[email protected]/dist/leaflet.css" />
+<style>
+  :root{
+    --paper:#F2EFE7;
+    --card:#FBF9F4;
+    --ink:#26313D;
+    --ink-soft:#6B7580;
+    --indigo:#2F5673;
+    --indigo-deep:#1E3A4F;
+    --persimmon:#C97B4A;
+    --moss:#7C8B6E;
+    --line:#DCD6C8;
+    --stamp-red:#B23A2E;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(47,86,115,0.05), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(201,123,74,0.06), transparent 45%);
+  }
+  a{color:inherit;}
+
+  /* ---------- gate ---------- */
+  #gate{
+    position:fixed; inset:0; background:var(--paper); z-index:200;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;
+  }
+  #gate .stamp-mark{ width:70px; height:70px; opacity:0.85; }
+  #gate h1{ font-family:'Instrument Serif', serif; font-style:italic; font-size:32px; margin:0; color:var(--indigo-deep); }
+  #gate p{ color:var(--ink-soft); font-size:14px; margin:0 0 6px; }
+  #gate input{
+    font-family:'Work Sans'; font-size:15px; padding:11px 16px; border:1.5px solid var(--line);
+    border-radius:var(--radius); background:var(--card); width:220px; text-align:center; letter-spacing:2px;
+  }
+  #gate input:focus{ outline:none; border-color:var(--indigo); }
+  #gate button{
+    font-family:'Work Sans'; font-weight:600; font-size:14px; padding:11px 24px; border:none;
+    border-radius:var(--radius); background:var(--indigo-deep); color:#fff; cursor:pointer; letter-spacing:.02em;
+  }
+  #gate button:hover{ background:var(--indigo); }
+  #gate .err{ color:var(--stamp-red); font-size:13px; height:16px; }
+  #site{ display:none; }
+  #site.show{ display:block; }
+
+  /* ---------- header ---------- */
+  header.top{
+    padding:64px 24px 40px; text-align:center; position:relative;
+  }
+  header.top .eyebrow{
+    font-family:'Shadows Into Light', cursive; font-size:20px; color:var(--persimmon);
+    letter-spacing:.01em; margin-bottom:2px;
+  }
+  header.top h1{
+    font-family:'Instrument Serif', serif; font-style:italic; font-weight:400;
+    font-size:clamp(40px, 7vw, 68px); margin:0; color:var(--indigo-deep); line-height:1;
+  }
+  header.top .sub{
+    font-size:14px; color:var(--ink-soft); margin-top:14px; max-width:480px; margin-left:auto; margin-right:auto;
+    line-height:1.6;
+  }
+  header.top .divider{
+    width:56px; height:1px; background:var(--persimmon); margin:26px auto 0;
+  }
+
+  /* ---------- nav ---------- */
+  nav.viewswitch{
+    display:flex; justify-content:center; gap:8px; margin:0 0 36px;
+  }
+  nav.viewswitch button{
+    font-family:'Work Sans'; font-weight:600; font-size:13px; letter-spacing:.03em;
+    padding:9px 20px; border-radius:999px; border:1.5px solid var(--line); background:var(--card);
+    color:var(--ink-soft); cursor:pointer; transition:all .2s ease;
+  }
+  nav.viewswitch button.active{ background:var(--indigo-deep); color:#fff; border-color:var(--indigo-deep); }
+
+  .wrap{ max-width:980px; margin:0 auto; padding:0 24px 100px; }
+
+  /* ---------- map view ---------- */
+  #mapView{ display:block; }
+  #mapView.hidden{ display:none; }
+  #map{
+    height:480px; border-radius:10px; border:1px solid var(--line);
+    box-shadow:0 8px 30px rgba(30,58,79,0.08);
+  }
+  .map-caption{
+    text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:14px;
+    font-style:italic; font-family:'Instrument Serif', serif; font-size:16px;
+  }
+
+  /* custom leaflet popup styling */
+  .leaflet-popup-content-wrapper{ border-radius:6px; font-family:'Work Sans'; }
+  .popup-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; color:var(--indigo-deep); margin:0 0 4px;}
+  .popup-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:15px; margin:0 0 6px;}
+  .popup-link{ font-size:12.5px; font-weight:600; color:var(--indigo); text-decoration:none; }
+
+  /* ---------- timeline view ---------- */
+  #timelineView{ display:none; }
+  #timelineView.show{ display:block; }
+
+  .entry-card{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:28px 30px; margin-bottom:22px; position:relative; overflow:hidden;
+    box-shadow:0 2px 10px rgba(30,58,79,0.04);
+    cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .entry-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,58,79,0.09); }
+  .entry-card .stamp{
+    position:absolute; top:20px; right:24px; width:54px; height:54px; opacity:0.9;
+  }
+  .entry-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:17px; margin:0 0 4px; }
+  .entry-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:28px; color:var(--indigo-deep); margin:0 0 8px; max-width:80%; }
+  .entry-tag{
+    display:inline-block; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--moss); border:1px solid var(--moss); border-radius:999px; padding:3px 10px; margin-bottom:12px;
+  }
+  .entry-excerpt{ font-size:14.5px; line-height:1.7; color:var(--ink); max-width:78%; }
+
+  /* ---------- entry detail overlay ---------- */
+  #entryOverlay{
+    position:fixed; inset:0; background:rgba(38,49,61,0.5); backdrop-filter:blur(2px);
+    display:none; align-items:flex-start; justify-content:center; z-index:150; padding:40px 16px; overflow-y:auto;
+  }
+  #entryOverlay.show{ display:flex; }
+  .entry-detail{
+    background:var(--card); max-width:640px; width:100%; border-radius:10px; padding:44px 40px 40px;
+    position:relative; box-shadow:0 20px 60px rgba(20,30,40,0.25);
+  }
+  .entry-detail .close{
+    position:absolute; top:18px; right:20px; background:none; border:none; font-size:22px; color:var(--ink-soft);
+    cursor:pointer; line-height:1;
+  }
+  .entry-detail .stamp{ width:64px; height:64px; margin-bottom:10px; }
+  .entry-detail .entry-date{ font-size:18px; }
+  .entry-detail .entry-title{ font-size:36px; max-width:100%; }
+  .entry-detail .entry-tag{ margin-bottom:20px; }
+  .entry-body{ font-size:15.5px; line-height:1.85; color:var(--ink); white-space:pre-line; }
+  .entry-body p{ margin:0 0 16px; }
+  .entry-links{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
+  .entry-links a{
+    font-size:14px; color:var(--indigo); text-decoration:none; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .entry-links a:hover{ text-decoration:underline; }
+  .photos-btn{
+    margin-top:26px; display:inline-flex; align-items:center; gap:8px;
+    background:var(--indigo-deep); color:#fff; border:none; border-radius:999px;
+    padding:12px 24px; font-family:'Work Sans'; font-weight:600; font-size:14px; cursor:pointer;
+    text-decoration:none;
+  }
+  .photos-btn:hover{ background:var(--indigo); }
+
+  footer{
+    text-align:center; padding:30px 24px 50px; font-size:12px; color:var(--ink-soft);
+    font-family:'Shadows Into Light', cursive; font-size:16px;
+  }
+
+  @media (max-width:600px){
+    .entry-title, .entry-detail .entry-title{ font-size:24px; max-width:100%; }
+    .entry-excerpt{ max-width:100%; }
+    #map{ height:360px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <svg class="stamp-mark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#B23A2E" stroke-width="3"/><text x="50" y="58" text-anchor="middle" font-family="Instrument Serif, serif" font-style="italic" font-size="15" fill="#B23A2E">日本</text></svg>
+  <h1>Romi in Japan</h1>
+  <p>this journal is just for family — enter the password to continue</p>
+  <input type="password" id="pw" placeholder="password" autocomplete="off">
+  <div class="err" id="pwErr"></div>
+  <button onclick="tryEnter()">Enter</button>
+</div>
+
+<div id="site">
+
+  <header class="top">
+    <div class="eyebrow">a little record, kept for you</div>
+    <h1>Romi in Japan</h1>
+    <p class="sub">April 2027 — a year and a half in Nagoya, told one stamp at a time. Click a mark on the map, or scroll through everything below.</p>
+    <div class="divider"></div>
+  </header>
+
+  <nav class="viewswitch">
+    <button class="active" id="btnMap" onclick="showView('map')">Map</button>
+    <button id="btnTimeline" onclick="showView('timeline')">All entries</button>
+  </nav>
+
+  <div class="wrap">
+    <div id="mapView">
+      <div id="map"></div>
+      <div class="map-caption">every stamp is a place, a meal, a small piece of the year</div>
+    </div>
+
+    <div id="timelineView"></div>
+  </div>
+
+  <footer>with love, from Nagoya 日本</footer>
+</div>
+
+<div id="entryOverlay" onclick="if(event.target===this) closeEntry()">
+  <div class="entry-detail" id="entryDetailContent"></div>
+</div>
+
+<script src="https://unpkg.com/[email protected]/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/[email protected]/dist/leaflet.js"></script>
+<script>
+/* ---------------- Supabase setup ----------------
+   Paste your own values here, replacing the placeholder text.
+   Both of these are safe to have visible in the code — see the chat for why.
+------------------------------------------------- */
+const SUPABASE_URL = "https://fwtekzwtikmuvxqddsdj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_9r0cZSeuGM34Dhy-sgCI5g_U8qukQ9N";
+const FAMILY_EMAIL = "family@romi-injapan.com"; // the second user you just created — change if you used a different email
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+/* ---------------- entries now live in Supabase, not here ----------------
+   Add/edit entries directly in your Supabase project: Table Editor → entries → Insert row.
+   Columns: title, entry_date, tag, lat, lng, excerpt, body, links (jsonb array), photos_url
+------------------------------------------------------------------------- */
+let ENTRIES = [];
+
+async function loadEntries(){
+  const { data, error } = await sb.from('entries').select('*').order('entry_date', { ascending: false });
+  if(error){
+    console.error('Could not load entries:', error);
+    document.getElementById('timelineView').innerHTML = `<p style="text-align:center;color:var(--ink-soft);">couldn't load entries — check the console for details</p>`;
+    return;
+  }
+  ENTRIES = data;
+  renderTimeline();
+  if(window._leafletMap){ addMarkers(); } else { initMap(); }
+}
+
+/* ---------------- gate — real login via Supabase ---------------- */
+async function tryEnter(){
+  const btn = document.querySelector('#gate button');
+  const val = document.getElementById('pw').value;
+  document.getElementById('pwErr').textContent = "";
+  btn.disabled = true; btn.textContent = "checking...";
+
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: FAMILY_EMAIL,
+    password: val
+  });
+
+  btn.disabled = false; btn.textContent = "Enter";
+
+  if(error){
+    document.getElementById('pwErr').textContent = "that's not quite it — try again";
+    return;
+  }
+
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('site').classList.add('show');
+  loadEntries();
+}
+document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryEnter(); });
+
+/* ---------------- view switching ---------------- */
+function showView(v){
+  document.getElementById('btnMap').classList.toggle('active', v==='map');
+  document.getElementById('btnTimeline').classList.toggle('active', v==='timeline');
+  document.getElementById('mapView').classList.toggle('hidden', v!=='map');
+  document.getElementById('timelineView').classList.toggle('show', v==='timeline');
+  if(v==='map'){ setTimeout(()=>{ if(window._leafletMap) window._leafletMap.invalidateSize(); }, 50); }
+}
+
+/* ---------------- stamp svg (reused per entry) ---------------- */
+function stampSvg(){
+  return `<svg class="stamp" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#B23A2E" stroke-width="2.5" opacity="0.75"/><circle cx="50" cy="50" r="36" fill="none" stroke="#B23A2E" stroke-width="1" opacity="0.5"/></svg>`;
+}
+
+/* ---------------- render timeline ---------------- */
+function renderTimeline(){
+  const el = document.getElementById('timelineView');
+  if(ENTRIES.length === 0){
+    el.innerHTML = `<p style="text-align:center;color:var(--ink-soft);padding:40px 0;">no entries yet — add your first one in Supabase's Table Editor</p>`;
+    return;
+  }
+  el.innerHTML = ENTRIES.map(e => `
+    <div class="entry-card" onclick="openEntry('${e.id}')">
+      ${stampSvg()}
+      <div class="entry-date">${e.entry_date}</div>
+      <div class="entry-tag">${e.tag||''}</div>
+      <div class="entry-title">${e.title}</div>
+      <div class="entry-excerpt">${e.excerpt||''}</div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- entry detail overlay ---------------- */
+function openEntry(id){
+  const e = ENTRIES.find(x=>x.id===id);
+  if(!e) return;
+  const linksHtml = (e.links||[]).map(l=>`<a href="${l.url}" target="_blank">→ ${l.label}</a>`).join('');
+  document.getElementById('entryDetailContent').innerHTML = `
+    <button class="close" onclick="closeEntry()">×</button>
+    ${stampSvg()}
+    <div class="entry-date">${e.entry_date}</div>
+    <div class="entry-tag">${e.tag||''}</div>
+    <div class="entry-title">${e.title}</div>
+    <div class="entry-body">${e.body||''}</div>
+    <div class="entry-links">${linksHtml}</div>
+    ${e.photos_url ? `<a class="photos-btn" href="${e.photos_url}" target="_blank">🌸 View photos</a>` : ''}
+  `;
+  document.getElementById('entryOverlay').classList.add('show');
+}
+function closeEntry(){ document.getElementById('entryOverlay').classList.remove('show'); }
+
+/* ---------------- map ---------------- */
+function initMap(){
+  if(window._leafletMap) { window._leafletMap.invalidateSize(); addMarkers(); return; }
+  const map = L.map('map', { scrollWheelZoom:false }).setView([35.5, 136.5], 6.4);
+  window._leafletMap = map;
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+  }).addTo(map);
+  addMarkers();
+}
+
+function addMarkers(){
+  const map = window._leafletMap;
+  if(window._markers){ window._markers.forEach(m=>map.removeLayer(m)); }
+  window._markers = [];
+
+  const stampIcon = L.divIcon({
+    className: '',
+    html: `<div style="width:34px;height:34px;border-radius:50%;background:#FBF9F4;border:2.5px solid #B23A2E;box-shadow:0 3px 8px rgba(30,58,79,0.25);"></div>`,
+    iconSize: [34,34], iconAnchor: [17,17]
+  });
+
+  ENTRIES.forEach(e=>{
+    if(e.lat==null || e.lng==null) return;
+    const marker = L.marker([e.lat, e.lng], {icon: stampIcon}).addTo(map);
+    marker.bindPopup(`
+      <div class="popup-date">${e.entry_date}</div>
+      <div class="popup-title">${e.title}</div>
+      <a class="popup-link" href="javascript:void(0)" onclick="openEntry('${e.id}')">read this entry →</a>
+    `);
+    window._markers.push(marker);
+  });
+}
+
+// entries load automatically after a successful login — see tryEnter() above
+</script>
+
+</body>
+</html>
