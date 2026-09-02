@@ -6,7 +6,7 @@
 <title>Romi in Japan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600;700&family=Shadows+Into+Light&family=Special+Elite&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lib/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 <style>
   :root{
     --paper:#F2EFE7;
@@ -24,16 +24,16 @@
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    margin:0; background:var(--paper); color:var(--ink);
+    margin:0; background:#E3F0F7; color:var(--ink);
     font-family:'Work Sans', sans-serif;
-    background-image:
-      radial-gradient(circle at 15% 8%, rgba(47,86,115,0.05), transparent 40%),
-      radial-gradient(circle at 85% 92%, rgba(201,123,74,0.06), transparent 45%),
-      radial-gradient(circle at 50% 100%, transparent 20%, rgba(38,49,61,0.032) 21%, rgba(38,49,61,0.032) 24%, transparent 25%, transparent 40%, rgba(38,49,61,0.032) 41%, rgba(38,49,61,0.032) 44%, transparent 45%, transparent),
-      radial-gradient(circle at 0% 100%, transparent 20%, rgba(38,49,61,0.032) 21%, rgba(38,49,61,0.032) 24%, transparent 25%, transparent 40%, rgba(38,49,61,0.032) 41%, rgba(38,49,61,0.032) 44%, transparent 45%, transparent);
-    background-size: auto, auto, 64px 32px, 64px 32px;
-    background-repeat: no-repeat, no-repeat, repeat, repeat;
-    background-attachment: fixed, fixed, fixed, fixed;
+    overflow-x:hidden;
+  }
+  #bgLayer{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:url('lib/images/page-background.png');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
   }
   a{color:inherit;}
 
@@ -44,14 +44,14 @@
   }
   #gate .stamp-mark{ width:70px; height:70px; opacity:0.85; }
   #gate h1{ font-family:'Instrument Serif', serif; font-style:italic; font-size:32px; margin:0; color:var(--indigo-deep); }
-  #gate p{ color:var(--ink-soft); font-size:14px; margin:0 0 6px; }
+  #gate p{ color:var(--ink-soft); font-size:17px; margin:0 0 6px; }
   #gate input{
-    font-family:'Work Sans'; font-size:15px; padding:11px 16px; border:1.5px solid var(--line);
-    border-radius:var(--radius); background:var(--card); width:220px; text-align:center; letter-spacing:2px;
+    font-family:'Work Sans'; font-size:19px; padding:14px 18px; border:1.5px solid var(--line);
+    border-radius:var(--radius); background:var(--card); width:240px; text-align:center; letter-spacing:2px;
   }
   #gate input:focus{ outline:none; border-color:var(--indigo); }
   #gate button{
-    font-family:'Work Sans'; font-weight:600; font-size:14px; padding:11px 24px; border:none;
+    font-family:'Work Sans'; font-weight:600; font-size:17px; padding:14px 28px; border:none;
     border-radius:var(--radius); background:var(--indigo-deep); color:#fff; cursor:pointer; letter-spacing:.02em;
   }
   #gate button:hover{ background:var(--indigo); }
@@ -65,87 +65,701 @@
   }
   header.top .eyebrow{
     font-family:'Shadows Into Light', cursive; font-size:20px; color:var(--persimmon);
-    letter-spacing:.01em; margin-bottom:2px;
+    letter-spacing:.01em; margin-bottom:2px; position:relative; z-index:1;
   }
   header.top h1{
     font-family:'Instrument Serif', serif; font-style:italic; font-weight:400;
     font-size:clamp(40px, 7vw, 68px); margin:0; color:var(--indigo-deep); line-height:1;
+    position:relative; z-index:1;
   }
   header.top .sub{
-    font-size:14px; color:var(--ink-soft); margin-top:14px; max-width:480px; margin-left:auto; margin-right:auto;
-    line-height:1.6;
+    font-size:17px; color:var(--ink-soft); margin-top:14px; max-width:480px; margin-left:auto; margin-right:auto;
+    line-height:1.6; position:relative; z-index:1;
   }
   header.top .divider{
     width:56px; height:1px; background:var(--persimmon); margin:26px auto 0;
+    position:relative; z-index:1;
   }
 
-  .widgets{ display:flex; justify-content:center; gap:16px; margin-top:28px; flex-wrap:wrap; }
+  .widgets{ display:flex; justify-content:center; gap:18px; margin-top:28px; flex-wrap:wrap; position:relative; z-index:1; }
   .widget{
-    border-radius:16px; padding:18px 26px; display:flex; flex-direction:column; align-items:center; gap:8px;
-    box-shadow:0 4px 14px rgba(30,58,79,0.08); min-width:120px;
+    border-radius:24px; padding:20px 24px 14px; display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-start; gap:16px;
+    box-shadow:0 10px 22px rgba(30,58,79,0.09); width:200px; position:relative; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.75); box-sizing:border-box;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   }
-  .widget-weather{ background:#E1EEF6; }
-  .widget-clock{ background:#F7E2E6; }
-  .widget-countdown{ background:#FBF0D0; }
-  .clock-face{ width:56px; height:56px; }
-  .icon-box{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; }
-  .widget-icon{ font-size:30px; line-height:1; }
-  .widget-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700; }
-  .widget-value{ font-family:'Instrument Serif', serif; font-style:italic; font-size:24px; color:var(--indigo-deep); }
-  .widget-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:-4px; }
+  .widget::before{
+    content:''; position:absolute; inset:0; pointer-events:none; border-radius:23px;
+    background:linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.05) 45%, rgba(30,58,79,0.02) 100%);
+  }
+  .widget-weather{
+    background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32));
+    box-shadow:
+      0 16px 30px rgba(30,58,79,0.14),
+      0 4px 10px rgba(30,58,79,0.08),
+      inset 0 2px 0 rgba(255,255,255,0.6),
+      inset 0 -4px 10px rgba(47,86,115,0.06);
+    transition:background 1s ease, box-shadow 1s ease;
+  }
+  .widget-weather::after{
+    content:''; position:absolute; top:-30%; left:-20%; width:140%; height:70%;
+    background:radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0) 60%);
+    transform:rotate(-8deg); pointer-events:none; transition:opacity 1s ease; z-index:0;
+  }
+  .widget-weather.night{
+    background:linear-gradient(160deg, rgba(53,80,122,0.4), rgba(70,98,140,0.35));
+    box-shadow:
+      0 16px 30px rgba(20,35,70,0.22),
+      0 4px 10px rgba(20,35,70,0.16),
+      inset 0 2px 0 rgba(255,255,255,0.15),
+      inset 0 -4px 10px rgba(0,0,0,0.15);
+  }
+  .widget-weather.night::after{ opacity:0.5; }
+  .widget-weather.night .widget-label{ color:#EAF4FA; }
 
-  /* ---------- nav ---------- */
-  nav.viewswitch{
-    display:flex; justify-content:center; gap:8px; margin:0 0 36px;
+  .weather-scene{
+    width:100%; height:170px; position:relative; z-index:1;
   }
-  nav.viewswitch button{
-    font-family:'Work Sans'; font-weight:600; font-size:13px; letter-spacing:.03em;
-    padding:9px 20px; border-radius:999px; border:1.5px solid var(--line); background:var(--card);
-    color:var(--ink-soft); cursor:pointer; transition:all .2s ease;
+  .weather-scene .weather-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:34px;
   }
-  nav.viewswitch button.active{ background:var(--indigo-deep); color:#fff; border-color:var(--indigo-deep); }
+  .weather-scene img.weather-illustration{
+    position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px);
+    object-fit:contain; display:none;
+  }
+
+  .weather-slider-track{
+    width:100%; height:7px; border-radius:999px; position:relative; z-index:1;
+    background:linear-gradient(90deg, #56CCF2, #F2C94C, #EB5757);
+    margin:6px 0 2px;
+  }
+  .weather-slider-knob{
+    position:absolute; top:50%; width:15px; height:15px; background:#fff; border:2px solid var(--indigo-deep);
+    border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 2px 4px rgba(0,0,0,0.2);
+    left:0%; transition:left 1s ease;
+  }
+
+  .widget-clock{ background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32)); box-shadow:0 10px 22px rgba(30,58,79,0.10); }
+  .widget-countdown{ background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32)); box-shadow:0 10px 22px rgba(30,58,79,0.10); }
+  .countdown-scene{
+    margin:-20px -24px 0; position:relative; z-index:1; height:170px; overflow:hidden;
+  }
+  .countdown-illustration{ display:block; width:100%; height:100%; object-fit:cover; }
+  .clock-widget-face{ width:150px; height:150px; position:relative; z-index:1; margin:0 auto; }
+  .clock-face-img{ width:100%; height:100%; display:block; }
+  .clock-hand{ position:absolute; left:50%; top:50%; width:auto; }
+  #jstHour{ height:30%; transform-origin:49.42% 85.00%; }
+  #jstMinute{ height:42%; transform-origin:49.21% 87.00%; }
+  .icon-box{
+    width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.55); border-radius:14px; box-shadow:inset 0 2px 4px rgba(30,58,79,0.06);
+    position:relative; z-index:1;
+  }
+  .widget-icon{ font-size:28px; line-height:1; }
+  .widget-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700;
+    position:relative; z-index:1;
+  }
+  .widget-clock .widget-label{ color:#875753; font-size:21px; }
+  .widget-weather .widget-label{ font-size:23px; }
+  .widget-countdown .widget-label{ color:#5A4038; font-size:19px; }
+  .widget-value{
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:24px; color:var(--indigo-deep);
+    position:relative; z-index:1;
+  }
+  #jstClock{
+    background:linear-gradient(160deg, #D4ABA4, #BC8E8E); padding:8.5px 22px; border-radius:12px;
+    box-shadow:0 3px 8px rgba(122,53,80,0.28);
+    font-size:23px; line-height:1; color:#FFF3E8;
+    font-family:'Work Sans', sans-serif; font-style:normal; font-weight:600;
+  }
+  .widget-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:-4px; position:relative; z-index:1; }
+
+  /* countdown as flip-clock style blocks, warm brown to match the torii illustration */
+  .flip-row{ display:flex; gap:8px; position:relative; z-index:1; margin-top:-10px; }
+  .flip-col{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .flip-block{
+    background:linear-gradient(160deg, #7A4426, #4E2A17); color:#FFF3E4; border-radius:9px; padding:6px 12px;
+    text-align:center; min-width:42px; box-shadow:0 3px 0 rgba(0,0,0,0.25);
+  }
+  .flip-value{ font-family:'Instrument Serif', serif; font-style:normal; font-weight:600; font-size:26px; line-height:1; }
+  .flip-label{ font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:#5A4038; opacity:0.85; line-height:1; }
+
+  /* ---------- site-wide nav (Home | Itinerary | Map | Photo Gallery) ---------- */
+  .site-nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; justify-content:center; padding:14px 24px;
+    /* Same translucent glass treatment as the clock/weather/countdown widgets */
+    background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32));
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 2px 12px rgba(30,58,79,0.06);
+  }
+  .site-nav-inner{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .site-nav-link{
+    all:unset; cursor:pointer; font-family:'Work Sans'; font-weight:600; font-size:16px; letter-spacing:.04em;
+    text-transform:uppercase; color:var(--ink-soft); padding:8px 4px; border-bottom:2px solid transparent;
+    transition:color .2s ease, border-color .2s ease;
+  }
+  .site-nav-link:hover{ color:var(--indigo); }
+  .site-nav-link.active{ color:var(--indigo-deep); border-color:var(--persimmon); }
+  .site-nav-sep{ color:var(--line); font-size:13px; }
+
+  /* Persistent Home button — fixed in place regardless of scroll, so it's
+     always in the same easy-to-find spot no matter how far down the page
+     you are, rather than relying on someone noticing the small "Home"
+     link up in the nav bar. */
+  #homeFab{
+    all:unset; position:fixed; top:80px; left:24px; z-index:200; cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    font-family:'Work Sans', sans-serif; font-weight:700; font-size:16px;
+    color:var(--indigo-deep); background:#FFFDF8;
+    padding:12px 20px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,0.9);
+    box-shadow:0 6px 18px rgba(30,58,79,0.22);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  #homeFab:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,58,79,0.3); }
+  @media (max-width:700px){
+    #homeFab{ top:auto; bottom:20px; left:20px; }
+  }
+
+  /* ---------- combined journal + map + gallery layout ---------- */
+  .combined-layout{
+    display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start;
+  }
+  /* This 40px gap is the whitespace between the map's bottom edge and the
+     gallery's top edge — bump this one number to adjust that spacing. */
+  .side-stack{ display:flex; flex-direction:column; gap:40px; }
+  @media (max-width:980px){
+    .combined-layout{ grid-template-columns:1fr; }
+    /* Below this width there's no spare column to bleed into, so the frame
+       goes back to being responsive (scales with viewport) instead of a
+       fixed 750px, which would otherwise overflow a phone screen. */
+    .map-photo-frame{ width:100%; height:0; padding-bottom:54.533%; margin:0 auto 10px; }
+  }
+  .panel{
+    /* Same translucent glass treatment as the clock/weather/countdown
+       widgets — watery, blurred backdrop instead of a solid warm card. */
+    background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32));
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 10px 30px rgba(30,58,79,0.08);
+    border-radius:20px; /* rounds the Journal and Gallery card backgrounds — bump this to taste */
+    padding:26px; box-sizing:border-box;
+    position:relative; overflow:hidden;
+  }
+  .panel::before{
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.05) 42%, rgba(30,58,79,0.02) 100%);
+  }
+  .panel > *{ position:relative; z-index:1; }
+  .panel h3{
+    font-family:'Work Sans', sans-serif; font-style:normal; font-weight:500; font-size:28px;
+    letter-spacing:.01em;
+    color:var(--indigo-deep); margin:0 0 16px;
+  }
+  .panel-head{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .panel-head h3{ margin:0; }
+  .journal-controls{ display:flex; gap:10px; flex-wrap:wrap; }
+  .journal-controls select, .journal-controls input{
+    font-family:'Work Sans'; font-size:16px; padding:11px 18px; border-radius:999px;
+    border:1.5px solid var(--line); background:rgba(255,255,255,0.7); color:var(--ink);
+  }
+  .journal-controls input{ min-width:170px; }
+  .journal-controls select:focus, .journal-controls input:focus{ outline:2px solid var(--indigo); outline-offset:1px; }
+
+  .journal-panel{ height:1080px; }
+  .journal-list{ max-height:960px; overflow-y:auto; padding-right:6px; }
+  .journal-list .entry-card{ width:100%; }
+
+  .gallery-panel{ height:480px; width:810px; position:relative; top:-50px ;left:25px; }
+  .gallery-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;
+    max-height:380px; overflow-y:auto; padding-right:2px;
+  }
+
+  /* ---------- MAP nav link: large map on top, Journal entries below,
+     both at the same centered width. Gallery is hidden entirely. ---------- */
+  #basketView.mode-map-only .gallery-panel{ display:none; }
+  #basketView.mode-map-only .combined-layout{
+    grid-template-columns:1fr; max-width:1350px; margin:0 auto;
+  }
+  #basketView.mode-map-only .side-stack{
+    order:-1; /* map first, journal entries follow below it */
+  }
+  #basketView.mode-map-only .map-panel{
+    width:100%;
+  }
+  #basketView.mode-map-only .map-photo-frame{
+    position:relative; left:0; top:0;
+    width:100%; height:950px;
+  }
+  #basketView.mode-map-only .journal-panel{
+    width:100%; height:1200px;
+  }
+  #basketView.mode-map-only .journal-list{
+    max-height:1100px;
+  }
+
+  /* ---------- PHOTO GALLERY nav link: Gallery only, Journal + Map hidden ---------- */
+  #basketView.mode-gallery-only .journal-panel{ display:none; }
+  #basketView.mode-gallery-only .map-panel{ display:none; }
+  #basketView.mode-gallery-only .combined-layout{ grid-template-columns:1fr; }
+  #basketView.mode-gallery-only .gallery-panel{
+    /* the fixed width/offset above was tuned for sitting beside the map —
+       standalone, it becomes a normal full-width centered panel instead.
+       Must stay position:relative (not static) — the panel's background
+       sheen effect (.panel::before) is absolutely positioned relative to
+       this element, and switching to static broke that containing block,
+       which is what caused the stray white corner artifact. */
+    position:relative; width:100%; max-width:1100px; height:auto; top:0; left:0; margin:0 auto;
+  }
+  #basketView.mode-gallery-only .gallery-grid{
+    max-height:none; overflow-y:visible; grid-template-columns:repeat(4, 1fr);
+  }
+
+  /* Holiday/Nagoya filter tabs — only make sense on the combined Photo
+     Gallery page (both trips together), so hidden by default and only
+     shown there. On a single trip's own Journal+Map+Gallery view,
+     filtering by trip would be meaningless since you're already inside
+     one trip. */
+  .gallery-filter-tabs{ display:none; gap:8px; }
+  #basketView.mode-gallery-only .gallery-filter-tabs{ display:flex; }
+  .map-filter-tabs{ display:none; gap:10px; justify-content:center; margin-bottom:0px; }
+  #basketView.mode-map-only .map-filter-tabs{ display:flex; }
+  .map-filter-btn{
+    all:unset; cursor:pointer; font-family:'Work Sans', sans-serif; font-weight:600; font-size:20px;
+    letter-spacing:.02em; padding:11px 22px; border-radius:999px;
+    border:1.5px solid var(--line); background:rgba(255,255,255,0.7); color:var(--ink-soft);
+    transition:all .15s ease;
+  }
+  .map-filter-btn:hover{ border-color:var(--indigo); color:var(--indigo); }
+  .map-filter-btn.active{ background:var(--indigo-deep); border-color:var(--indigo-deep); color:#fff; }
+
+  .gallery-filter-btn{
+    all:unset; cursor:pointer; font-family:'Work Sans', sans-serif; font-weight:600; font-size:17px;
+    letter-spacing:.02em; padding:8px 16px; border-radius:999px;
+    border:1.5px solid var(--line); background:rgba(255,255,255,0.7); color:var(--ink-soft);
+    transition:all .15s ease;
+  }
+  .gallery-filter-btn:hover{ border-color:var(--indigo); color:var(--indigo); }
+  .gallery-filter-btn.active{ background:var(--indigo-deep); border-color:var(--indigo-deep); color:#fff; }
+
+  /* one folder tile per location */
+  .gallery-folder{
+    position:relative; border-radius:10px; overflow:hidden; cursor:pointer;
+    background:#FFFDF8; border:1px solid rgba(255,255,255,0.9);
+    box-shadow:0 6px 18px rgba(30,58,79,0.22);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .gallery-folder:hover{ transform:translateY(-3px); box-shadow:0 12px 26px rgba(30,58,79,0.3); }
+  .gallery-folder.no-link{ cursor:default; }
+  .gallery-folder.no-link:hover{ transform:none; box-shadow:0 6px 18px rgba(30,58,79,0.22); }
+
+  /* Cover image / collage area — a FIXED height, not aspect-ratio:1/1.
+     aspect-ratio sizes off the column's own width, so on a wide panel
+     (like this one, matched to the enlarged map) it was ballooning into a
+     huge square and pushing the label/count below the visible area. */
+  .gallery-folder-collage{
+    height:140px; display:grid; gap:2px; background:var(--line);
+    overflow:hidden; /* safety net — nothing can spill past this box into the label/count below */
+  }
+  .gallery-folder-collage.collage-1{ grid-template-columns:1fr; }
+  .gallery-folder-collage.collage-2{ grid-template-columns:1fr 1fr; }
+  /* 3 photos: one big photo spans both rows on the left, the other two
+     stack beside it — no empty 4th cell like a plain 2x2 grid would have. */
+  .gallery-folder-collage.collage-3{ grid-template-columns:1.3fr 1fr; grid-template-rows:1fr 1fr; }
+  .gallery-folder-collage.collage-3 img:nth-child(1){ grid-column:1; grid-row:1 / 3; }
+  .gallery-folder-collage.collage-3 img:nth-child(2){ grid-column:2; grid-row:1; }
+  .gallery-folder-collage.collage-3 img:nth-child(3){ grid-column:2; grid-row:2; }
+  /* 4 photos: a full, evenly-filled 2x2 grid */
+  .gallery-folder-collage.collage-4{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
+  .gallery-folder-collage img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    /* Without this, a grid item's default min-height:auto lets an <img>
+       expand past its 1fr row allocation to fit its own aspect ratio —
+       which is exactly what was pushing the 2nd row out of the fixed
+       100px box and behind the label/count text below it. */
+    min-height:0; min-width:0;
+  }
+
+  .gallery-folder-placeholder{
+    height:140px; display:flex; align-items:center; justify-content:center;
+    font-size:32px;
+  }
+
+  .gallery-folder-label{
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:26px; color:var(--indigo-deep);
+    text-transform:capitalize; line-height:1.3;
+  }
+  .gallery-folder-info{
+    /* Solid background, own box below the collage — guarantees the text
+       can never visually sit on top of a photo, regardless of collage
+       layout (1/2/3/4 images). */
+    position:relative; background:#FFFDF8; padding:10px 12px;
+  }
+
+  .gallery-empty{ text-align:center; color:var(--ink-soft); font-size:16px; line-height:1.6; padding:20px 6px; }
+  .gallery-empty code{ background:rgba(30,58,79,0.06); padding:1px 6px; border-radius:4px; }
+
+  /* ---------- itinerary (whole trip, both baskets, at a glance) ---------- */
+  #itineraryView.hidden{ display:none; }
+  .itinerary-list{ max-width:800px; margin:0 auto; display:flex; flex-direction:column; gap:10px; padding:0 24px 80px; }
+  .itinerary-row{
+    display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--line);
+    border-radius:10px; padding:14px 18px; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .itinerary-row:hover{ transform:translateX(4px); box-shadow:0 6px 16px rgba(30,58,79,0.08); }
+  .itinerary-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:18px; width:88px; flex-shrink:0; }
+  .itinerary-badge{
+    font-size:9.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px;
+    border-radius:999px; flex-shrink:0;
+  }
+  .itinerary-badge.holiday{ background:rgba(201,123,74,0.15); color:var(--persimmon); }
+  .itinerary-badge.nagoya{ background:rgba(124,139,110,0.15); color:var(--moss); }
+  .itinerary-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:22px; color:var(--indigo-deep); flex:1; }
+  .itinerary-tag{ font-size:15px; color:var(--ink-soft); flex-shrink:0; }
+
+  /* tabs: Holiday | Prep | Nagoya */
+  .itinerary-tabs{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:0 24px 28px; }
+  .itin-tab-btn{
+    all:unset; cursor:pointer; font-family:'Work Sans', sans-serif; font-weight:600; font-size:15px;
+    letter-spacing:.02em; padding:10px 20px; border-radius:999px; text-align:center;
+    border:1.5px solid var(--line); background:rgba(255,255,255,0.7); color:var(--ink-soft);
+    transition:all .15s ease;
+  }
+  .itin-tab-btn:hover{ border-color:var(--indigo); color:var(--indigo); }
+  .itin-tab-btn.active{ background:var(--indigo-deep); border-color:var(--indigo-deep); color:#fff; }
+  .itinerary-tab-panel.hidden{ display:none; }
+
+  /* prep checklist: an overview (progress bar) + a list of tasks, each
+     showing done/not-done at a glance rather than as dated journal rows,
+     since prep is about status, not travel dates. */
+  .prep-overview{
+    max-width:800px; margin:0 auto 24px; padding:0 24px; text-align:center;
+  }
+  .prep-progress-label{
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:22px; color:var(--indigo-deep); margin-bottom:10px;
+  }
+  .prep-progress-track{
+    width:100%; max-width:420px; margin:0 auto; height:12px; background:var(--line);
+    border-radius:999px; overflow:hidden;
+  }
+  .prep-progress-fill{
+    height:100%; background:var(--moss); border-radius:999px; transition:width .3s ease;
+  }
+  .prep-checklist{
+    max-width:800px; margin:0 auto; display:flex; flex-direction:column; gap:10px; padding:0 24px 80px;
+  }
+  .prep-item{
+    display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--line);
+    border-radius:10px; padding:14px 18px;
+  }
+  .prep-item.done{ opacity:0.65; }
+  .prep-check{
+    width:26px; height:26px; border-radius:50%; border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-size:15px; font-weight:700; color:#fff; background:transparent;
+  }
+  .prep-item.done .prep-check{ background:var(--moss); border-color:var(--moss); }
+  .prep-task-text{ font-size:17px; color:var(--ink); flex:1; }
+  .prep-item.done .prep-task-text{ text-decoration:line-through; color:var(--ink-soft); }
+  .prep-notes{ font-size:14px; color:var(--ink-soft); flex-shrink:0; }
 
   .wrap{ max-width:1400px; margin:0 auto; padding:0 24px 100px; }
 
-  /* ---------- map view ---------- */
-  #mapView{ display:block; }
-  #mapView.hidden{ display:none; }
-  #map{
-    height:480px; border-radius:10px; border:1px solid var(--line);
-    box-shadow:0 8px 30px rgba(30,58,79,0.08);
+  /* ---------- landing (basket picker) ---------- */
+  #landingView{ display:flex; justify-content:center; padding:60px 24px 110px; }
+  #landingView.hidden{ display:none; }
+  .basket-boxes{
+    display:flex; gap:24px; flex-wrap:wrap; justify-content:center; max-width:1360px; width:100%;
   }
-  .map-caption{
-    text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:14px;
-    font-style:italic; font-family:'Instrument Serif', serif; font-size:16px;
+  /* ---------------------------------------------------------------------
+     FIXED-LAYOUT SYSTEM for the basket cards.
+     Every piece below (image, text block, highlight box, button) is
+     positioned with position:absolute + explicit px top/left/width/height
+     off the card's own top-left corner. Nothing here is computed from
+     flex-grow, grid fractions, percentages, or content size — so nothing
+     can shift when text length, image size, or data changes.
+     Card box = 540 x 400px, fixed.
+  --------------------------------------------------------------------- */
+  .basket-box{
+    all:unset; box-sizing:border-box; cursor:pointer;
+    display:block; position:relative; overflow:visible;
+    width:540px; height:390px; /* fixed card size — never changes */
+    border-radius:22px;
+    box-shadow:0 10px 30px rgba(30,58,79,0.10);
+    transition:transform .25s ease, box-shadow .25s ease; border:1.5px solid rgba(255,255,255,0.8);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  }
+  .basket-box:hover{ transform:translateY(-6px); box-shadow:0 20px 44px rgba(30,58,79,0.18); }
+  .basket-box:active{ transform:translateY(-2px); }
+  .basket-holiday, .basket-nagoya{
+    background:linear-gradient(160deg, rgba(255,255,255,0.5), rgba(255,255,255,0.32));
+  }
+  .basket-box::before{
+    content:''; position:absolute; inset:0; pointer-events:none; border-radius:21px; z-index:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.08) 45%, rgba(30,58,79,0.02) 100%);
   }
 
-  /* custom leaflet popup styling */
-  .leaflet-popup-content-wrapper{ border-radius:6px; font-family:'Work Sans'; }
-  .popup-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; color:var(--indigo-deep); margin:0 0 4px;}
-  .popup-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:15px; margin:0 0 6px;}
-  .popup-link{ font-size:12.5px; font-weight:600; color:var(--indigo); text-decoration:none; }
+  /* .basket-box-media is just a wrapper in the HTML — display:contents
+     removes its own box so it doesn't add another layer of layout;
+     .basket-box-image is positioned directly against the card. */
+  .basket-box-media{ display:contents; }
+  .basket-box-image{
+    position:absolute; z-index:2;
+    filter:drop-shadow(0 12px 20px rgba(30,58,79,0.28));
+  }
+  .basket-box-image img{ width:100%; height:auto; display:block; }
+
+  /* Holiday image — fixed position + fixed width, independent of Nagoya */
+  .basket-holiday .basket-box-image{ top:-34px; left:-110px; width:350px; }
+
+  /* Nagoya image — fixed position + fixed width, independent of Holiday (mirrored via "right") */
+  .basket-nagoya .basket-box-image{ top:-60px; right:-120px; width:380px; }
+
+  /* Text block: fixed top/width/height so it can never grow into the
+     image or into the highlight/button row below. Long text is clipped
+     (overflow:hidden) rather than pushing anything around. */
+  .basket-box-content{
+    position:absolute; z-index:1;
+    top:32px; width:251px; height:220px; overflow:hidden;
+    display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:6px;
+  }
+  .basket-holiday .basket-box-content{ left:263px; }
+  .basket-nagoya .basket-box-content{ left:26px; }
+
+  .basket-box-title{
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:45px; color:var(--indigo-deep);
+  }
+  .basket-box-sub{ font-size:18px; color:var(--ink-soft); line-height:1.5; }
+  .basket-box-count{
+    margin-top:2px; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); background:rgba(255,255,255,0.65); border-radius:999px; padding:4px 12px;
+  }
+
+  /* .basket-box-footer is likewise just a wrapper — display:contents so
+     the highlight box and button below are positioned independently,
+     each with their own fixed coordinates, rather than as flex siblings
+     whose position depends on each other's size. */
+  .basket-box-footer{ display:contents; }
+
+  .basket-box-highlight{
+    position:absolute; z-index:3;
+    top:260px; left:26px; width:304px; height:100px; /* fixed box, fixed spot */
+    background:rgba(248, 252, 254, 0.993); border-radius:14px;
+    padding:10px 14px; box-sizing:border-box;
+    display:flex; align-items:center; gap:10px;
+  }
+  .basket-box-highlight-icon{ font-size:20px; line-height:1; flex-shrink:0; }
+  .basket-box-highlight-info{ min-width:0; overflow:hidden; }
+  .basket-box-highlight-label{
+    font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);
+  }
+  .basket-box-highlight-text{
+    font-family:'Work Sans', sans-serif; font-style:normal; font-size:16px; color:var(--indigo-deep);
+    line-height:1.25;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+  .basket-box-btn{
+    position:absolute; z-index:3;
+    top:290px; left:346px; width:168px; height:36px; /* fixed box, fixed spot, vertically centered against the highlight box by the numbers above rather than by flexbox */
+    box-sizing:border-box;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    background:var(--indigo-deep); color:#fff; font-family:'Work Sans'; font-weight:600; font-size:15px;
+    border-radius:999px; letter-spacing:.02em;
+  }
+
+  /* Small screens: the fixed 540x400 layout above doesn't fit a phone
+     viewport, so it's scaled down as one rigid unit via transform:scale.
+     This is a uniform zoom, not a re-layout — every element keeps the
+     exact same relative position/size to every other element, nothing
+     reflows or recalculates. margin-bottom compensates for the visual
+     shrink so the surrounding page doesn't leave a gap where the card
+     used to be. Say the word if you'd rather have a second, separately-
+     tuned set of fixed coordinates for phones instead of a scaled clone. */
+  @media (max-width:700px){
+    .basket-boxes{ padding:0 12px; }
+    .basket-box{
+      transform:scale(0.62); transform-origin:top center;
+      margin-bottom:-160px;
+    }
+    .basket-box:hover{ transform:scale(0.62) translateY(-6px); }
+    .basket-box:active{ transform:scale(0.62) translateY(-2px); }
+  }
+
+  /* ---------- basket view (map/timeline for one basket) ---------- */
+  #basketView.hidden{ display:none; }
+  .basket-header{ text-align:center; margin:0 24px 8px; }
+  .basket-header .eyebrow{
+    font-family:'Shadows Into Light', cursive; font-size:18px; color:var(--persimmon); margin-bottom:2px;
+  }
+  .basket-header h2{
+    font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; color:var(--indigo-deep);
+    font-size:34px; margin:0 0 28px;
+  }
+
+/* ---------- map: keeps its own picture-frame look, no card background behind it ---------- */
+.map-panel{
+  background:none; border:none; box-shadow:none; padding:0;
+  overflow:visible; /* .panel sets overflow:hidden by default — undo that so the frame can bleed past the column edge */
+}
+.map-panel::before{ display:none; } /* no sheen either — this section isn't a card */
+
+.map-photo-frame{
+  position:relative;
+  left:-10px;
+  top:-40px;
+  width:890px;  /* MAP_W */
+  height:609px; /* MAP_H = MAP_W * 0.54533, the frame artwork's aspect ratio */
+}
+
+.map-photo-frame .frame-overlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:5;
+  display:block;
+}
+
+#map{
+  position:absolute;
+  left:5%;
+  top:10%;
+  width:88%;
+  height:80%;
+  border-radius:4px;
+  z-index:4;
+  overflow:hidden;
+}
+
+.map-caption{
+  text-align:center;
+  font-size:15px;
+  color:var(--ink-soft);
+  margin-top:14px;
+  font-style:italic;
+  font-family:'Instrument Serif', serif;
+}
+
+@media (max-width:600px){
+  .entry-title, .entry-detail .entry-title{ font-size:24px; max-width:100%; }
+  .entry-excerpt{ max-width:100%; }
+  .frame-overlay{ display:none; }
+  .map-photo-frame{ height:auto; padding-bottom:0; }
+  #map{ position:static; height:320px; }
+}
+
+@media (min-width:1600px){
+  .wrap{ max-width:1700px; }
+  header.top h1{ font-size:76px; }
+  header.top .sub{ max-width:560px; font-size:15px; }
+  .widget{ width:250px; }
+  .widgets{ gap:24px; }
+  .clock-widget-face{ width:180px; height:180px; }
+  .weather-scene{ height:200px; }
+  .countdown-scene{ height:200px; }
+}
+
+/* custom maplibre popup styling */
+.maplibregl-popup-content{
+  border-radius:14px;
+  font-family:'Work Sans';
+  padding:0; overflow:hidden;
+}
+/* MapLibre's built-in × close button — bumped up for readability */
+.maplibregl-popup-close-button{
+  font-size:26px; width:32px; height:32px; line-height:32px;
+  color:var(--ink-soft); right:4px; top:2px; z-index:2;
+}
+.maplibregl-popup-close-button:hover{ background:rgba(30,58,79,0.08); color:var(--ink); }
+
+.popup-caption{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  font-family:'Instrument Serif', serif; font-style:italic; font-size:21px;
+  color:var(--indigo-deep); cursor:pointer;
+  padding:18px 40px 18px 18px;
+  transition:background .15s ease;
+}
+.popup-caption::after{
+  content:'→'; font-weight:700; font-family:'Work Sans', sans-serif; font-style:normal;
+  color:#C4607F; flex-shrink:0; font-size:19px;
+}
+.popup-caption:hover{ background:rgba(196,96,127,0.08); }
+.popup-caption:active{ background:rgba(196,96,127,0.16); }
+
+.map-pin{
+  width:52px; height:52px; cursor:pointer;
+  /* stacked white drop-shadows create a soft white halo/outline around the
+     icon so it stands out against busy map tiles; the last one is the
+     original soft ground-shadow for depth */
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 3px #fff)
+    drop-shadow(0 3px 6px rgba(30,58,79,0.35));
+  transition:transform .15s ease;
+}
+.map-pin:hover{ transform:scale(1.18); }
+.map-pin svg{ width:100%; height:100%; display:block; }
+.map-pin-label{
+  white-space:nowrap; pointer-events:none;
+  font-family:'Work Sans', sans-serif; font-weight:700; font-size:19px; letter-spacing:.03em;
+  text-transform:uppercase; color:var(--indigo-deep);
+  /* white halo instead of a background box — stays legible over any map
+     tile color without adding another boxy shape to the map */
+  text-shadow:
+    0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff,
+    0 0 5px #fff, 0 0 5px #fff;
+}
+
+.popup-title{
+  font-family:'Instrument Serif', serif;
+  font-style:italic;
+  font-size:23px;
+  color:var(--indigo-deep);
+  margin:0 0 4px;
+}
+
+.popup-date{
+  font-family:'Shadows Into Light', cursive;
+  color:var(--persimmon);
+  font-size:18px;
+  margin:0 0 6px;
+}
+
+.popup-link{
+  font-size:16px;
+  font-weight:600;
+  color:var(--indigo);
+  text-decoration:none;
+}
 
   /* ---------- timeline view ---------- */
-  #timelineView{ display:none; }
-  #timelineView.show{ display:block; }
+  /* ---------- journal list ---------- */
 
   .entry-card{
-    background:var(--card); border:1px solid var(--line); border-radius:8px;
-    padding:28px 30px; margin-bottom:22px; position:relative; overflow:hidden;
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:28px 30px; margin:0 auto 22px; position:relative; overflow:hidden;
     box-shadow:0 2px 10px rgba(30,58,79,0.04);
     cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;
+    width:80%;
   }
   .entry-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,58,79,0.09); }
   .entry-card .stamp{
     position:absolute; top:20px; right:24px; width:54px; height:54px; opacity:0.9;
   }
-  .entry-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:17px; margin:0 0 4px; }
-  .entry-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:28px; color:var(--indigo-deep); margin:0 0 8px; max-width:90%; }
+  .entry-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:21px; margin:0 0 4px; }
+  .entry-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:34px; color:var(--indigo-deep); margin:0 0 8px; max-width:90%; }
   .entry-tag{
-    display:inline-block; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
-    color:var(--moss); border:1px solid var(--moss); border-radius:999px; padding:3px 10px; margin-bottom:12px;
+    display:inline-block; font-size:14px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--moss); border:1px solid var(--moss); border-radius:999px; padding:5px 13px; margin-bottom:12px;
   }
-  .entry-excerpt{ font-size:14.5px; line-height:1.7; color:var(--ink); max-width:86%; }
+  .entry-excerpt{ font-size:18px; line-height:1.7; color:var(--ink); max-width:86%; }
 
   /* ---------- entry detail overlay ---------- */
   #entryOverlay{
@@ -154,51 +768,47 @@
   }
   #entryOverlay.show{ display:flex; }
   .entry-detail{
-    background:var(--card); max-width:760px; width:100%; border-radius:10px; padding:44px 40px 40px;
+    background:var(--card); max-width:1100px; width:100%; border-radius:10px; padding:48px 64px 56px;
     position:relative; box-shadow:0 20px 60px rgba(20,30,40,0.25);
   }
   .entry-detail .close{
-    position:absolute; top:18px; right:20px; background:none; border:none; font-size:22px; color:var(--ink-soft);
+    position:absolute; top:18px; right:20px; background:none; border:none; font-size:30px; color:var(--ink-soft);
     cursor:pointer; line-height:1;
   }
   .entry-detail .stamp{ width:64px; height:64px; margin-bottom:10px; }
-  .entry-detail .entry-date{ font-size:18px; }
-  .entry-detail .entry-title{ font-size:36px; max-width:100%; }
+  .entry-detail .entry-date{ font-size:22px; }
+  .entry-detail .entry-title{ font-size:42px; max-width:100%; }
   .entry-detail .entry-tag{ margin-bottom:20px; }
-  .entry-body{ font-size:15.5px; line-height:1.85; color:var(--ink); white-space:pre-line; }
-  .entry-body p{ margin:0 0 16px; }
-  .entry-body h3{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; color:var(--indigo-deep); font-size:23px; margin:26px 0 6px; }
-  .entry-body h4{ font-family:'Work Sans'; font-weight:700; color:var(--persimmon); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:20px 0 6px; }
+  .entry-body{ font-size:19px; line-height:1.85; color:var(--ink); white-space:pre-line; }
+  .entry-body p{ margin:0 0 16px; max-width:680px; }
+  .entry-body h3{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; color:var(--indigo-deep); font-size:26px; margin:26px 0 6px; max-width:680px; }
+  .entry-body h4{ font-family:'Work Sans'; font-weight:700; color:var(--persimmon); font-size:16px; text-transform:uppercase; letter-spacing:.05em; margin:20px 0 6px; max-width:680px; }
   .entry-body strong{ color:var(--indigo-deep); font-weight:700; }
   .entry-body em{ color:var(--ink-soft); }
   .entry-body img{ max-width:100%; border-radius:8px; margin:14px 0; display:block; box-shadow:0 4px 16px rgba(30,58,79,0.12); }
   .entry-links{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
   .entry-links a{
-    font-size:14px; color:var(--indigo); text-decoration:none; font-weight:600;
+    font-size:17px; color:var(--indigo); text-decoration:none; font-weight:600;
     display:inline-flex; align-items:center; gap:6px;
   }
   .entry-links a:hover{ text-decoration:underline; }
   .photos-btn{
     margin-top:26px; display:inline-flex; align-items:center; gap:8px;
     background:var(--indigo-deep); color:#fff; border:none; border-radius:999px;
-    padding:12px 24px; font-family:'Work Sans'; font-weight:600; font-size:14px; cursor:pointer;
+    padding:14px 28px; font-family:'Work Sans'; font-weight:600; font-size:17px; cursor:pointer;
     text-decoration:none;
   }
   .photos-btn:hover{ background:var(--indigo); }
 
   footer{
-    text-align:center; padding:30px 24px 50px; font-size:12px; color:var(--ink-soft);
-    font-family:'Shadows Into Light', cursive; font-size:16px;
+    text-align:center; padding:30px 24px 50px; font-size:15px; color:var(--ink-soft);
+    font-family:'Shadows Into Light', cursive; font-size:19px;
   }
 
-  @media (max-width:600px){
-    .entry-title, .entry-detail .entry-title{ font-size:24px; max-width:100%; }
-    .entry-excerpt{ max-width:100%; }
-    #map{ height:360px; }
-  }
 </style>
 </head>
 <body>
+<div id="bgLayer"></div>
 
 <div id="gate">
   <svg class="stamp-mark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#B23A2E" stroke-width="3"/><text x="50" y="58" text-anchor="middle" font-family="Instrument Serif, serif" font-style="italic" font-size="15" fill="#B23A2E">日本</text></svg>
@@ -211,57 +821,191 @@
 
 <div id="site">
 
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <button class="site-nav-link active" data-target="home" onclick="goToSection('home')">Home</button>
+      <span class="site-nav-sep">|</span>
+      <button class="site-nav-link" data-target="itinerary" onclick="goToSection('itinerary')">Itinerary</button>
+      <span class="site-nav-sep">|</span>
+      <button class="site-nav-link" data-target="map" onclick="goToSection('map')">Map</button>
+      <span class="site-nav-sep">|</span>
+      <button class="site-nav-link" data-target="gallery" onclick="goToSection('gallery')">Photo Gallery</button>
+      <span class="site-nav-sep">|</span>
+      <button class="site-nav-link" data-target="holiday" onclick="enterBasket('holiday')">Holiday</button>
+      <span class="site-nav-sep">|</span>
+      <button class="site-nav-link" data-target="nagoya" onclick="enterBasket('nagoya')">Nagoya</button>
+    </div>
+  </nav>
+
+  <button id="homeFab" onclick="goToSection('home')" style="display:none;">🏠 Home</button>
+
   <header class="top">
-    <div class="eyebrow">a little record, kept for you</div>
-    <h1>Romi in Japan</h1>
-    <p class="sub">April 2027 — a year and a half in Nagoya, told one stamp at a time. Click a mark on the map, or scroll through everything below.</p>
-    <div class="divider"></div>
-    <div class="widgets">
+    <div id="heroText">
+      <div class="eyebrow">a little record, kept for you</div>
+      <h1>Romi in Japan</h1>
+      <p class="sub">April 2027 — a year and a half in Nagoya, told one stamp at a time. Click a mark on the map, or scroll through everything below.</p>
+      <div class="divider"></div>
+    </div>
+    <div class="widgets" id="widgetsBlock">
       <div class="widget widget-clock">
-        <svg class="clock-face" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#1E3A4F" stroke-width="2" opacity="0.35"/>
-          <line x1="50" y1="10" x2="50" y2="16" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
-          <line x1="50" y1="90" x2="50" y2="84" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
-          <line x1="10" y1="50" x2="16" y2="50" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
-          <line x1="90" y1="50" x2="84" y2="50" stroke="#1E3A4F" stroke-width="2" opacity="0.5"/>
-          <line id="jstHour" x1="50" y1="50" x2="50" y2="30" stroke="#1E3A4F" stroke-width="3.5" stroke-linecap="round"/>
-          <line id="jstMinute" x1="50" y1="50" x2="50" y2="18" stroke="#1E3A4F" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="50" cy="50" r="3" fill="#1E3A4F"/>
-        </svg>
+        <div class="clock-widget-face">
+          <img src="lib/images/clock-face.png" alt="" class="clock-face-img">
+          <img id="jstHour" class="clock-hand" src="lib/images/clock-hand-hour.png" alt="">
+          <img id="jstMinute" class="clock-hand" src="lib/images/clock-hand-minute.png" alt="">
+        </div>
         <span class="widget-label">Japan time</span>
         <span class="widget-value" id="jstClock">--:--</span>
       </div>
-      <div class="widget widget-weather">
-        <div class="icon-box"><span class="widget-icon" id="weatherIcon">🌤️</span></div>
-        <span class="widget-label">Nagoya</span>
-        <span class="widget-value" id="weatherTemp">--°</span>
+      <div class="widget widget-weather" id="weatherWidgetCard">
+        <div class="weather-scene" id="weatherScene">
+          <span class="weather-fallback" id="weatherFallback" style="display:none;">🌤️</span>
+          <img class="weather-illustration" id="weatherIllustration" src="" alt="" style="display:none;" onerror="this.style.display='none'; document.getElementById('weatherFallback').style.display='flex';">
+        </div>
+        <span class="widget-label" id="weatherCityTemp" style="position:relative; z-index:1;">NAGOYA: --°</span>
+        <div class="weather-slider-track">
+          <div class="weather-slider-knob" id="weatherSliderKnob"></div>
+        </div>
+        <button id="weatherPreviewBtn" onclick="cycleWeatherPreview()" style="display:none; margin-top:6px; font-size:10px; padding:3px 10px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer; position:relative; z-index:1;">▶ next: —</button>
       </div>
       <div class="widget widget-countdown">
-        <svg class="clock-face" viewBox="0 0 100 100">
-          <line x1="20" y1="30" x2="20" y2="85" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
-          <line x1="80" y1="30" x2="80" y2="85" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
-          <line x1="10" y1="35" x2="90" y2="35" stroke="#7C8B6E" stroke-width="5" stroke-linecap="round"/>
-          <line x1="15" y1="22" x2="85" y2="22" stroke="#7C8B6E" stroke-width="4" stroke-linecap="round"/>
-          <line x1="50" y1="35" x2="50" y2="60" stroke="#7C8B6E" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-        </svg>
+        <div class="countdown-scene">
+          <img src="lib/images/countdown-torii.png" alt="" class="countdown-illustration">
+        </div>
         <span class="widget-label" id="countdownLabel">until Japan</span>
-        <span class="widget-value" id="countdownValue">--</span>
+        <div class="flip-row" id="countdownBlocks">
+          <div class="flip-col">
+            <div class="flip-block"><div class="flip-value" id="countdownVal1">--</div></div>
+            <div class="flip-label" id="countdownUnit1"></div>
+          </div>
+          <div class="flip-col">
+            <div class="flip-block"><div class="flip-value" id="countdownVal2">--</div></div>
+            <div class="flip-label" id="countdownUnit2"></div>
+          </div>
+        </div>
+        <span class="widget-value" id="countdownValue" style="display:none;"></span>
       </div>
     </div>
   </header>
 
-  <nav class="viewswitch">
-    <button class="active" id="btnMap" onclick="showView('map')">Map</button>
-    <button id="btnTimeline" onclick="showView('timeline')">All entries</button>
-  </nav>
+  <div id="landingView">
+    <div class="basket-boxes">
+      <button class="basket-box basket-holiday" onclick="enterBasket('holiday')">
+        <div class="basket-box-media">
+          <div class="basket-box-image"><img src="lib/images/holiday-hero.png" alt=""></div>
+        </div>
+        <div class="basket-box-content">
+          <div class="basket-box-title">Holiday</div>
+          <div class="basket-box-sub">before the term starts — the trip around Japan</div>
+          <div class="basket-box-count" id="count-holiday">—</div>
+        </div>
+        <div class="basket-box-footer">
+          <div class="basket-box-highlight">
+            <div class="basket-box-highlight-icon">🍁</div>
+            <div class="basket-box-highlight-info">
+              <div class="basket-box-highlight-label">Latest entry</div>
+              <div class="basket-box-highlight-text" id="highlight-holiday">—</div>
+            </div>
+          </div>
+          <div class="basket-box-btn">Read Blog →</div>
+        </div>
+      </button>
+      <button class="basket-box basket-nagoya" onclick="enterBasket('nagoya')">
+        <div class="basket-box-media">
+          <div class="basket-box-image"><img src="lib/images/nagoya-hero.png" alt=""></div>
+        </div>
+        <div class="basket-box-content">
+          <div class="basket-box-title">Nagoya</div>
+          <div class="basket-box-sub">a year and a half of school, told one stamp at a time</div>
+          <div class="basket-box-count" id="count-nagoya">—</div>
+        </div>
+        <div class="basket-box-footer">
+          <div class="basket-box-highlight">
+            <div class="basket-box-highlight-icon">🎓</div>
+            <div class="basket-box-highlight-info">
+              <div class="basket-box-highlight-label">Latest entry</div>
+              <div class="basket-box-highlight-text" id="highlight-nagoya">—</div>
+            </div>
+          </div>
+          <div class="basket-box-btn">Read Blog →</div>
+        </div>
+      </button>
+    </div>
+  </div>
 
-  <div class="wrap">
-    <div id="mapView">
-      <div id="map"></div>
-      <div class="map-caption">every stamp is a place, a meal, a small piece of the year</div>
+  <div id="basketView" class="hidden">
+    <div class="basket-header">
+      <div class="eyebrow" id="basketEyebrow"></div>
+      <h2 id="basketTitle"></h2>
     </div>
 
-    <div id="timelineView"></div>
+    <div class="wrap">
+      <div class="combined-layout">
+        <section class="panel journal-panel" id="journalSection">
+          <div class="panel-head">
+            <h3>Journal Entries</h3>
+            <div class="journal-controls">
+              <select id="dateFilter" onchange="renderTimeline()">
+                <option value="all">All dates</option>
+              </select>
+              <input type="text" id="journalSearch" placeholder="Search entries…" oninput="renderTimeline()">
+            </div>
+          </div>
+          <div id="timelineView" class="journal-list"></div>
+        </section>
+
+        <div class="side-stack">
+          <section class="panel map-panel" id="mapSection">
+            <div class="map-filter-tabs" id="mapFilterTabs">
+              <button class="map-filter-btn active" data-filter="all" onclick="setMapFilter('all')">All</button>
+              <button class="map-filter-btn" data-filter="holiday" onclick="setMapFilter('holiday')">Holiday</button>
+              <button class="map-filter-btn" data-filter="nagoya" onclick="setMapFilter('nagoya')">Nagoya</button>
+            </div>
+            <div class="map-photo-frame">
+              <div id="map"></div>
+              <img class="frame-overlay" src="lib/images/map-frame.png" alt="">
+            </div>
+          </section>
+
+          <section class="panel gallery-panel" id="gallerySection">
+            <div class="panel-head">
+              <h3>Photo Gallery</h3>
+              <div class="gallery-filter-tabs" id="galleryFilterTabs">
+                <button class="gallery-filter-btn active" data-filter="all" onclick="setGalleryFilter('all')">All</button>
+                <button class="gallery-filter-btn" data-filter="holiday" onclick="setGalleryFilter('holiday')">Holiday</button>
+                <button class="gallery-filter-btn" data-filter="nagoya" onclick="setGalleryFilter('nagoya')">Nagoya</button>
+              </div>
+            </div>
+            <div id="galleryGrid" class="gallery-grid"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="itineraryView" class="hidden">
+    <div class="basket-header">
+      <div class="eyebrow">the whole trip, at a glance</div>
+      <h2>Itinerary</h2>
+    </div>
+
+    <div class="itinerary-tabs">
+      <button class="itin-tab-btn active" data-tab="holiday" onclick="showItineraryTab('holiday')">Holiday</button>
+      <button class="itin-tab-btn" data-tab="prep" onclick="showItineraryTab('prep')">Prep for moving &amp; school</button>
+      <button class="itin-tab-btn" data-tab="nagoya" onclick="showItineraryTab('nagoya')">Nagoya (school period)</button>
+    </div>
+
+    <div id="itineraryHolidayPanel" class="itinerary-tab-panel">
+      <div id="itineraryListHoliday" class="itinerary-list"></div>
+    </div>
+
+    <div id="itineraryPrepPanel" class="itinerary-tab-panel hidden">
+      <div id="prepOverview" class="prep-overview"></div>
+      <div id="prepChecklist" class="prep-checklist"></div>
+    </div>
+
+    <div id="itineraryNagoyaPanel" class="itinerary-tab-panel hidden">
+      <div id="itineraryListNagoya" class="itinerary-list"></div>
+    </div>
   </div>
 
   <footer>with love, from Nagoya 日本</footer>
@@ -272,7 +1016,7 @@
 </div>
 
 <script src="lib/supabase.js"></script>
-<script src="lib/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 /* ---------------- Supabase setup ----------------
    Paste your own values here, replacing the placeholder text.
@@ -284,22 +1028,182 @@ const FAMILY_EMAIL = "family@romi-injapan.com"; // the second user you just crea
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* ---------------- skip the gate if already signed in ----------------
+   Supabase keeps your session in localStorage across reloads by default —
+   the gate just never checked for it before, so it asked for the password
+   every single time even when you were still technically logged in. This
+   checks once on page load and, if a valid session exists, jumps straight
+   to the site instead of showing the password screen. Signing out (if you
+   ever add a button for that) or clearing the browser's site data is what
+   would bring the gate back. */
+(async function checkExistingSession(){
+  const { data } = await sb.auth.getSession();
+  if(data.session){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('site').classList.add('show');
+    loadEntries();
+    loadPrepTasks();
+  }
+})();
+
 /* ---------------- entries now live in Supabase, not here ----------------
    Add/edit entries directly in your Supabase project: Table Editor → entries → Insert row.
-   Columns: title, entry_date, tag, lat, lng, excerpt, body, links (jsonb array), photos_url
+   Columns: title, entry_date, tag, lat, lng, excerpt, body, links (jsonb array), photos_url, photos (jsonb array), pin_label
 ------------------------------------------------------------------------- */
 let ENTRIES = [];
+let PREP_TASKS = [];
+let currentBasket = null;
+
+const BASKET_META = {
+  holiday: { title:'Holiday', eyebrow:'before the term starts' },
+  nagoya:  { title:'Nagoya',  eyebrow:'a little record, kept for you' },
+  all:     { title:'Everywhere', eyebrow:'every stamp, from the whole trip' }
+};
+
+// Small helper: 'all' is a pseudo-basket meaning "don't filter by basket at
+// all" — used by the Map/Photo Gallery nav links so they can show a
+// combined view across both trips instead of just one.
+function entriesForCurrentBasket(){
+  return currentBasket === 'all' ? ENTRIES : ENTRIES.filter(e => e.basket === currentBasket);
+}
+
+// Only used on the combined Map page — lets the Holiday/Nagoya tabs there
+// narrow the Journal Entries list and the map pins down, without touching
+// currentBasket (which stays 'all' so the page's layout/mode doesn't change).
+let mapFilter = 'all';
+function entriesForMapPage(){
+  if(currentBasket !== 'all') return entriesForCurrentBasket();
+  const isMapPage = document.getElementById('basketView').classList.contains('mode-map-only');
+  if(isMapPage && mapFilter !== 'all') return ENTRIES.filter(e => e.basket === mapFilter);
+  return entriesForCurrentBasket();
+}
+function setMapFilter(basket){
+  mapFilter = basket;
+  document.querySelectorAll('#mapFilterTabs .map-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.filter === basket);
+  });
+  populateDateFilter();
+  renderTimeline();
+  addMarkers();
+}
 
 async function loadEntries(){
   const { data, error } = await sb.from('entries').select('*').order('entry_date', { ascending: true });
   if(error){
     console.error('Could not load entries:', error);
-    document.getElementById('timelineView').innerHTML = `<p style="text-align:center;color:var(--ink-soft);">couldn't load entries — check the console for details</p>`;
+    document.getElementById('landingView').innerHTML = `<p style="text-align:center;color:var(--ink-soft);">couldn't load entries — check the console for details</p>`;
     return;
   }
   ENTRIES = data;
+  updateBasketCounts();
+}
+
+/* prep_tasks: a new Supabase table for the "Prep for moving & school"
+   checklist — this is deliberately a separate table from entries, since
+   it's fundamentally different data (a done/not-done task, not a dated
+   journal post). Columns expected: task (text), done (bool), sort_order
+   (int, optional — controls display order), notes (text, optional). */
+async function loadPrepTasks(){
+  const { data, error } = await sb.from('prep_tasks').select('*').order('sort_order', { ascending: true });
+  if(error){
+    console.error('Could not load prep tasks:', error);
+    PREP_TASKS = [];
+    return;
+  }
+  PREP_TASKS = data || [];
+}
+
+function updateBasketCounts(){
+  ['holiday','nagoya'].forEach(b=>{
+    const basketEntries = ENTRIES.filter(e=>e.basket===b);
+    const n = basketEntries.length;
+    const el = document.getElementById('count-'+b);
+    if(el) el.textContent = n===0 ? 'no entries yet' : (n===1 ? '1 entry' : n+' entries');
+
+    const highlightEl = document.getElementById('highlight-'+b);
+    if(highlightEl){
+      // ENTRIES is sorted ascending by date, so the last matching one is the most recent
+      highlightEl.textContent = n===0 ? 'nothing posted yet' : basketEntries[n-1].title;
+    }
+  });
+}
+
+/* ---------------- section switching (Home / a basket / Itinerary) ---------------- */
+function setNavActive(target){
+  document.querySelectorAll('.site-nav-link').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.target === target);
+  });
+}
+function showSection(section){
+  // section: 'landing' | 'basket' | 'itinerary'
+  document.getElementById('landingView').classList.toggle('hidden', section !== 'landing');
+  document.getElementById('basketView').classList.toggle('hidden', section !== 'basket');
+  document.getElementById('itineraryView').classList.toggle('hidden', section !== 'itinerary');
+
+  // The big hero (title/subtitle) and the widgets only make sense on Home
+  // and Itinerary — Holiday, Nagoya, Map, and Photo Gallery all skip
+  // straight to their content instead of repeating the same header.
+  const showHeader = (section === 'landing' || section === 'itinerary');
+  document.getElementById('heroText').style.display = showHeader ? '' : 'none';
+  document.getElementById('widgetsBlock').style.display = showHeader ? '' : 'none';
+
+  // The floating Home button is only needed when you're not already home
+  document.getElementById('homeFab').style.display = (section === 'landing') ? 'none' : 'flex';
+}
+
+/* nav bar: Home / Itinerary jump straight there; Map / Photo Gallery live
+   inside a basket, so if nothing's open yet they open one (Holiday, by
+   default) and then scroll to that section within it. */
+function goToSection(target){
+  if(target === 'home'){
+    currentBasket = null;
+    showSection('landing');
+    setNavActive('home');
+    return;
+  }
+  if(target === 'itinerary'){
+    showSection('itinerary');
+    showItineraryTab('holiday');
+    setNavActive('itinerary');
+    return;
+  }
+  // Map and Photo Gallery are now dedicated links to the combined,
+  // cross-trip view (both baskets' entries together) — same behavior
+  // whether you're on the Home screen or already inside a specific
+  // basket, consistent with how Itinerary already works.
+  enterBasket('all');
+  // MAP shows Journal + Map (no Gallery); PHOTO GALLERY shows only Gallery
+  // (no Journal, no Map) — these classes hide the rest via CSS below.
+  document.getElementById('basketView').classList.add(target === 'map' ? 'mode-map-only' : 'mode-gallery-only');
+  if(target === 'gallery'){
+    setGalleryFilter('all'); // fresh visit — don't carry over a filter from last time
+  }
+  if(target === 'map'){
+    setMapFilter('all'); // fresh visit — don't carry over a filter from last time
+  }
+  setNavActive(target);
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- basket navigation ---------------- */
+function enterBasket(basket){
+  currentBasket = basket;
+  showSection('basket');
+  document.getElementById('basketView').classList.remove('mode-map-only', 'mode-gallery-only');
+  document.getElementById('basketEyebrow').textContent = BASKET_META[basket].eyebrow;
+  document.getElementById('basketTitle').textContent = BASKET_META[basket].title;
+  document.getElementById('journalSearch').value = '';
+  populateDateFilter();
   renderTimeline();
-  if(window._leafletMap){ addMarkers(); } else { initMap(); }
+  renderGallery();
+  if(window._maplibreMap){ addMarkers(); } else { initMap(); }
+  setTimeout(()=>{ if(window._maplibreMap) window._maplibreMap.resize(); }, 60);
+  setNavActive(basket);
+}
+function showLanding(){
+  currentBasket = null;
+  showSection('landing');
+  setNavActive('home');
 }
 
 /* ---------------- gate — real login via Supabase ---------------- */
@@ -324,17 +1228,12 @@ async function tryEnter(){
   document.getElementById('gate').style.display = 'none';
   document.getElementById('site').classList.add('show');
   loadEntries();
+  loadPrepTasks();
 }
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryEnter(); });
 
-/* ---------------- view switching ---------------- */
-function showView(v){
-  document.getElementById('btnMap').classList.toggle('active', v==='map');
-  document.getElementById('btnTimeline').classList.toggle('active', v==='timeline');
-  document.getElementById('mapView').classList.toggle('hidden', v!=='map');
-  document.getElementById('timelineView').classList.toggle('show', v==='timeline');
-  if(v==='map'){ setTimeout(()=>{ if(window._leafletMap) window._leafletMap.invalidateSize(); }, 50); }
-}
+/* Map and Journal are now always shown together in the combined layout,
+   so there's no separate view toggle to manage anymore. */
 
 /* ---------------- stamp svg (reused per entry) ---------------- */
 function stampSvg(){
@@ -350,14 +1249,41 @@ function stampSvg(){
   </svg>`;
 }
 
-/* ---------------- render timeline ---------------- */
+/* ---------------- journal: date filter + search ---------------- */
+function populateDateFilter(){
+  const sel = document.getElementById('dateFilter');
+  const dates = [...new Set(entriesForMapPage().map(e => e.entry_date))].sort();
+  sel.innerHTML = `<option value="all">All dates</option>` +
+    dates.map(d => `<option value="${d}">${d}</option>`).join('');
+}
+
+/* ---------------- render timeline (journal entries list) ---------------- */
 function renderTimeline(){
   const el = document.getElementById('timelineView');
-  if(ENTRIES.length === 0){
-    el.innerHTML = `<p style="text-align:center;color:var(--ink-soft);padding:40px 0;">no entries yet — add your first one in Supabase's Table Editor</p>`;
+  const dateVal = document.getElementById('dateFilter').value;
+  const searchVal = document.getElementById('journalSearch').value.trim().toLowerCase();
+
+  let entries = entriesForMapPage();
+  if(dateVal && dateVal !== 'all'){
+    entries = entries.filter(e => e.entry_date === dateVal);
+  }
+  if(searchVal){
+    entries = entries.filter(e =>
+      (e.title||'').toLowerCase().includes(searchVal) ||
+      (e.excerpt||'').toLowerCase().includes(searchVal) ||
+      (e.tag||'').toLowerCase().includes(searchVal) ||
+      (e.body||'').toLowerCase().includes(searchVal)
+    );
+  }
+
+  if(entries.length === 0){
+    const msg = (searchVal || dateVal !== 'all')
+      ? 'no entries match your filters — try clearing the search or picking "All dates"'
+      : `no entries in this basket yet — add one in Supabase's Table Editor and set its basket to "${currentBasket}"`;
+    el.innerHTML = `<p style="text-align:center;color:var(--ink-soft);padding:40px 0;">${msg}</p>`;
     return;
   }
-  el.innerHTML = ENTRIES.map(e => `
+  el.innerHTML = entries.map(e => `
     <div class="entry-card" onclick="openEntry('${e.id}')">
       ${stampSvg()}
       <div class="entry-date">${e.entry_date}</div>
@@ -366,6 +1292,159 @@ function renderTimeline(){
       <div class="entry-excerpt">${e.excerpt||''}</div>
     </div>
   `).join('');
+}
+
+/* ---------------- photo gallery: one "folder" per location ----------------
+   Groups this basket's entries by their tag (location — TOKYO, OSAKA, etc.,
+   the same tag already shown on journal entries). Each folder tile shows a
+   small cover collage (up to 4 images) built from any `photos` arrays on
+   entries at that location, and links out to that location's Google Photos
+   album via `photos_url` — the same field already used for the "View
+   photos" link on individual entries, just reused here as the folder's
+   destination. Neither field needs to be new: `photos_url` already exists
+   on entries; `photos` (jsonb array of image URLs) only needs a couple of
+   representative pictures per location, not the whole album. */
+
+// Only used on the combined Photo Gallery page — lets the Holiday/Nagoya
+// tabs narrow the gallery down without touching currentBasket (which stays
+// 'all' so the page's layout/mode doesn't change).
+let galleryFilter = 'all';
+function setGalleryFilter(basket){
+  galleryFilter = basket;
+  document.querySelectorAll('.gallery-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.filter === basket);
+  });
+  renderGallery();
+}
+
+/* A location with no `photos` array gets one of these instead — picked
+   deterministically from the location name itself, so "Tokyo" is always
+   the same color/icon every time, new locations automatically get a
+   reasonable-looking one with zero manual setup, and you never have to
+   touch an image file for this ever again. */
+const GALLERY_PLACEHOLDER_STYLES = [
+  { bg: 'linear-gradient(160deg, #F8D7E3, #F3AFC3)', icon: '🌸' },
+  { bg: 'linear-gradient(160deg, #D7E9F8, #AFCBE8)', icon: '⛩️' },
+  { bg: 'linear-gradient(160deg, #DCEBD2, #B7D6A0)', icon: '🍃' },
+  { bg: 'linear-gradient(160deg, #F6E3D0, #EFC49A)', icon: '🍁' },
+  { bg: 'linear-gradient(160deg, #FBEFCB, #F3D98A)', icon: '🏮' },
+  { bg: 'linear-gradient(160deg, #E6DFF5, #C6B8E8)', icon: '🎏' },
+  { bg: 'linear-gradient(160deg, #D3EDE7, #A3D6C9)', icon: '🗻' },
+  { bg: 'linear-gradient(160deg, #F1DCE0, #E0B4BE)', icon: '🍵' }
+];
+function placeholderForLocation(loc){
+  let hash = 0;
+  for(let i = 0; i < loc.length; i++){ hash = (hash * 31 + loc.charCodeAt(i)) >>> 0; }
+  return GALLERY_PLACEHOLDER_STYLES[hash % GALLERY_PLACEHOLDER_STYLES.length];
+}
+
+function renderGallery(){
+  const el = document.getElementById('galleryGrid');
+  const entries = (currentBasket === 'all' && galleryFilter !== 'all')
+    ? ENTRIES.filter(e => e.basket === galleryFilter)
+    : entriesForCurrentBasket();
+
+  const byLocation = {};
+  entries.forEach(e => {
+    const loc = (e.tag || 'untitled').toString();
+    if(!byLocation[loc]) byLocation[loc] = { entries: [], covers: [], link: null };
+    const g = byLocation[loc];
+    g.entries.push(e);
+    if(!g.link && e.photos_url) g.link = e.photos_url;
+    (e.photos || []).forEach(p => {
+      const url = typeof p === 'string' ? p : (p && p.url);
+      if(url && g.covers.length < 4) g.covers.push(url);
+    });
+  });
+
+  const folders = Object.keys(byLocation);
+  if(folders.length === 0){
+    el.innerHTML = `<p class="gallery-empty">no locations yet — journal entries need a <code>tag</code> (location) in Supabase before folders show up here</p>`;
+    return;
+  }
+
+  el.innerHTML = folders.map(loc => {
+    const g = byLocation[loc];
+    const coverHtml = g.covers.length
+      ? `<div class="gallery-folder-collage collage-${Math.min(g.covers.length,4)}">${g.covers.map(u=>`<img src="${u}" alt="" loading="lazy">`).join('')}</div>`
+      : (() => { const s = placeholderForLocation(loc); return `<div class="gallery-folder-placeholder" style="background:${s.bg}">${s.icon}</div>`; })();
+    const clickable = !!g.link;
+    return `
+      <div class="gallery-folder${clickable ? '' : ' no-link'}" ${clickable ? `onclick="window.open('${g.link}','_blank')"` : ''} title="${clickable ? 'Open '+loc+' photos on Google Photos' : loc+' — no Google Photos link yet'}">
+        ${coverHtml}
+        <div class="gallery-folder-info">
+          <div class="gallery-folder-label">${loc}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ---------------- itinerary: 3 tabs — Holiday, Prep, Nagoya ---------------- */
+function showItineraryTab(tab){
+  document.querySelectorAll('.itin-tab-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.getElementById('itineraryHolidayPanel').classList.toggle('hidden', tab !== 'holiday');
+  document.getElementById('itineraryPrepPanel').classList.toggle('hidden', tab !== 'prep');
+  document.getElementById('itineraryNagoyaPanel').classList.toggle('hidden', tab !== 'nagoya');
+
+  if(tab === 'prep') renderPrepTasks();
+  else renderItineraryList(tab);
+}
+
+function renderItineraryList(basket){
+  const el = document.getElementById(basket === 'holiday' ? 'itineraryListHoliday' : 'itineraryListNagoya');
+  const rows = ENTRIES.filter(e => e.basket === basket).sort((a, b) => (a.entry_date < b.entry_date ? -1 : 1));
+  if(rows.length === 0){
+    el.innerHTML = `<p style="text-align:center;color:var(--ink-soft);padding:40px 0;">nothing logged yet for ${BASKET_META[basket] ? BASKET_META[basket].title : basket} — add entries in Supabase to build this out</p>`;
+    return;
+  }
+  el.innerHTML = rows.map(e => `
+    <div class="itinerary-row" onclick="openFromItinerary('${e.id}')">
+      <span class="itinerary-date">${e.entry_date}</span>
+      <span class="itinerary-title">${e.title}</span>
+      <span class="itinerary-tag">${e.tag||''}</span>
+    </div>
+  `).join('');
+}
+
+/* Prep overview + checklist. Shows an at-a-glance progress bar (X of Y
+   done) followed by every task, with completed ones checked off and
+   struck through. Status is set from Supabase (Table Editor → prep_tasks
+   → toggle the `done` column) — this view is read-only for visitors. */
+function renderPrepTasks(){
+  const overviewEl = document.getElementById('prepOverview');
+  const listEl = document.getElementById('prepChecklist');
+
+  if(PREP_TASKS.length === 0){
+    overviewEl.innerHTML = '';
+    listEl.innerHTML = `<p style="text-align:center;color:var(--ink-soft);padding:40px 0;">no prep tasks added yet — add rows to the <code>prep_tasks</code> table in Supabase (columns: task, done, sort_order) to build this checklist</p>`;
+    return;
+  }
+
+  const doneCount = PREP_TASKS.filter(t => t.done).length;
+  const total = PREP_TASKS.length;
+  const pct = Math.round((doneCount / total) * 100);
+
+  overviewEl.innerHTML = `
+    <div class="prep-progress-label">${doneCount} of ${total} done</div>
+    <div class="prep-progress-track"><div class="prep-progress-fill" style="width:${pct}%"></div></div>
+  `;
+
+  listEl.innerHTML = PREP_TASKS.map(t => `
+    <div class="prep-item ${t.done ? 'done' : ''}">
+      <span class="prep-check">${t.done ? '✓' : ''}</span>
+      <span class="prep-task-text">${t.task}</span>
+      ${t.notes ? `<span class="prep-notes">${t.notes}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function openFromItinerary(id){
+  const e = ENTRIES.find(x => x.id === id);
+  if(e){ currentBasket = e.basket; } // keeps "back" behavior sane if they navigate onward from the entry
+  openEntry(id);
 }
 
 /* ---------------- entry detail overlay ---------------- */
@@ -389,35 +1468,76 @@ function closeEntry(){ document.getElementById('entryOverlay').classList.remove(
 
 /* ---------------- map ---------------- */
 function initMap(){
-  if(window._leafletMap) { window._leafletMap.invalidateSize(); addMarkers(); return; }
-  const map = L.map('map', { scrollWheelZoom:false }).setView([35.5, 136.5], 6.4);
-  window._leafletMap = map;
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
-  }).addTo(map);
-  addMarkers();
+  if(window._maplibreMap) { window._maplibreMap.resize(); addMarkers(); return; }
+
+  // OpenFreeMap's "Liberty" vector style — fully free, unlimited, keyless,
+  // and crisp at any zoom/screen density since it's vector (no upscaling
+  // blur the way raster tiles get past their native zoom). Needs MapLibre
+  // GL JS instead of Leaflet, which is why this whole function looks
+  // different from before — same map, different underlying library.
+  // Note: MapLibre takes center as [lng, lat] — the opposite order from
+  // Leaflet's [lat, lng].
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [136.5, 35.5],
+    zoom: 6.4,
+    attributionControl: { compact: true }
+  });
+  window._maplibreMap = map;
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+  map.on('load', addMarkers);
 }
 
 function addMarkers(){
-  const map = window._leafletMap;
-  if(window._markers){ window._markers.forEach(m=>map.removeLayer(m)); }
+  const map = window._maplibreMap;
+  if(!map) return;
+  if(window._markers){ window._markers.forEach(m=>m.remove()); }
   window._markers = [];
 
-  const stampIcon = L.divIcon({
-    className: '',
-    html: `<div style="width:34px;height:34px;border-radius:50%;background:#FBF9F4;border:1.5px solid #B23A2E;box-shadow:0 3px 8px rgba(30,58,79,0.25);display:flex;align-items:center;justify-content:center;">${stampSvg().replace('class="stamp"', 'style="width:26px;height:26px;"')}</div>`,
-    iconSize: [34,34], iconAnchor: [17,17]
-  });
-
-  ENTRIES.forEach(e=>{
+  entriesForMapPage().forEach((e, i)=>{
     if(e.lat==null || e.lng==null) return;
-    const marker = L.marker([e.lat, e.lng], {icon: stampIcon}).addTo(map);
-    marker.bindPopup(`
-      <div class="popup-date">${e.entry_date}</div>
-      <div class="popup-title">${e.title}</div>
-      <a class="popup-link" href="javascript:void(0)" onclick="openEntry('${e.id}')">read this entry →</a>
+
+    const el = document.createElement('div');
+    el.className = 'map-pin';
+    el.innerHTML = `
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C7.86 2 4.5 5.36 4.5 9.5c0 6 7.5 12.5 7.5 12.5s7.5-6.5 7.5-12.5C19.5 5.36 16.14 2 12 2z"
+              fill="#F3AFC3" stroke="#C4607F" stroke-width="1.2"/>
+        <circle cx="12" cy="9.5" r="3.4" fill="#FFF9F0" stroke="#C4607F" stroke-width="1"/>
+      </svg>
+    `;
+
+    // pin_label is a new Supabase column — a short, family-friendly caption
+    // written per entry specifically for the map popup (e.g. "Arriving in
+    // Tokyo!" instead of the full journal title). Falls back to the entry
+    // title if that column is blank/not filled in yet, so nothing breaks
+    // before you've gone through and written captions for every entry.
+    const caption = (e.pin_label && e.pin_label.trim()) ? e.pin_label : e.title;
+    const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
+      <div class="popup-caption" onclick="openEntry('${e.id}')">${caption}</div>
     `);
+
+    const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+      .setLngLat([e.lng, e.lat])
+      .setPopup(popup)
+      .addTo(map);
     window._markers.push(marker);
+
+    // Label is a fully separate marker pinned to the same coordinate,
+    // anchored to its own top edge so it sits just below the icon —
+    // completely decoupled from the icon's element/sizing, so it can't
+    // affect the icon's own anchor positioning.
+    const label = (e.tag || e.title || '').toString();
+    if(label){
+      const labelEl = document.createElement('div');
+      labelEl.className = 'map-pin-label';
+      labelEl.textContent = label;
+      const labelMarker = new maplibregl.Marker({ element: labelEl, anchor: 'top', offset: [0, 4] })
+        .setLngLat([e.lng, e.lat])
+        .addTo(map);
+      window._markers.push(labelMarker);
+    }
   });
 }
 
@@ -430,13 +1550,14 @@ function getTimeInZone(tz){
   const m = parseInt(parts.find(p=>p.type==='minute').value, 10);
   return {h, m};
 }
-function setHand(id, deg){
-  document.getElementById(id).setAttribute('transform', `rotate(${deg} 50 50)`);
+function setHand(id, deg, pivotXPct, pivotYPct){
+  document.getElementById(id).style.transform =
+    `translate(-${pivotXPct}%, -${pivotYPct}%) rotate(${deg}deg)`;
 }
 function updateClocks(){
   const jst = getTimeInZone('Asia/Tokyo');
-  setHand('jstHour', (jst.h % 12 + jst.m/60) * 30);
-  setHand('jstMinute', jst.m * 6);
+  setHand('jstHour', (jst.h % 12 + jst.m/60) * 30, 49.42, 85.00);
+  setHand('jstMinute', jst.m * 6, 49.21, 87.00);
   document.getElementById('jstClock').textContent = String(jst.h).padStart(2,'0')+':'+String(jst.m).padStart(2,'0');
 }
 updateClocks();
@@ -444,24 +1565,88 @@ setInterval(updateClocks, 1000);
 
 /* ---------------- weather (Nagoya, via Open-Meteo — free, no API key needed) ---------------- */
 function weatherCodeInfo(code){
-  if(code===0) return {icon:'☀️'};
-  if(code===1 || code===2) return {icon:'🌤️'};
-  if(code===3) return {icon:'☁️'};
-  if(code===45 || code===48) return {icon:'🌫️'};
-  if(code>=51 && code<=67) return {icon:'🌧️'};
-  if(code>=71 && code<=77) return {icon:'🌨️'};
-  if(code>=80 && code<=82) return {icon:'🌦️'};
-  if(code>=95) return {icon:'⛈️'};
-  return {icon:'🌥️'};
+  if(code===0) return {icon:'☀️', desc:'clear skies', category:'clear'};
+  if(code===1 || code===2) return {icon:'🌤️', desc:'mostly sunny', category:'partlyCloudy'};
+  if(code===3) return {icon:'☁️', desc:'cloudy', category:'cloudy'};
+  if(code===45 || code===48) return {icon:'🌫️', desc:'foggy', category:'cloudy'};
+  if(code>=51 && code<=67) return {icon:'🌧️', desc:'rainy', category:'rainy'};
+  if(code>=71 && code<=77) return {icon:'🌨️', desc:'snowy', category:'snowy'};
+  if(code===85 || code===86) return {icon:'🌨️', desc:'snow showers', category:'snowy'};
+  if(code>=80 && code<=82) return {icon:'🌦️', desc:'showers', category:'rainy'};
+  if(code>=95) return {icon:'⛈️', desc:'stormy', category:'stormy'};
+  return {icon:'🌥️', desc:'overcast', category:'cloudy'};
 }
+
+// your illustrations, mapped by condition category and day/night.
+// fog isn't a distinct illustration — it just borrows the cloudy art.
+// snowy has dedicated day art, but night snow borrows the cloudy-night art too.
+const WEATHER_IMAGES = {
+  day:   { clear:'Sunny.png',       partlyCloudy:'Cloudy_sun.png',   cloudy:'Cloudy.png',       rainy:'Rainy.png',       snowy:'Snowing.png',       stormy:'Stormy.png' },
+  night: { clear:'Clear_night.png', partlyCloudy:'Cloudy_night.png', cloudy:'Cloudy_night.png', rainy:'Rainy_night.png', snowy:'Cloudy_night.png',  stormy:'Stormy_night.png' }
+};
+
+function updateWeatherScene(isDay, category){
+  const scene = document.getElementById('weatherScene');
+  const card = document.getElementById('weatherWidgetCard');
+  const img = document.getElementById('weatherIllustration');
+  const fallback = document.getElementById('weatherFallback');
+
+  scene.classList.toggle('night', !isDay);
+  card.classList.toggle('night', !isDay);
+
+  const filename = (isDay ? WEATHER_IMAGES.day : WEATHER_IMAGES.night)[category];
+  if(filename){
+    img.src = 'lib/images/' + filename;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    fallback.style.display = 'flex';
+  }
+}
+
+// --- preview tool: add ?debug=weather to the URL to cycle through every
+// weather illustration + day/night combo with one click, instead of waiting
+// for real conditions in Nagoya to match. Invisible otherwise.
+const WEATHER_PREVIEW_STATES = [];
+['clear','partlyCloudy','cloudy','rainy','snowy','stormy'].forEach(category=>{
+  [true, false].forEach(isDay=>{
+    WEATHER_PREVIEW_STATES.push({category, isDay});
+  });
+});
+let weatherPreviewIndex = -1;
+function cycleWeatherPreview(){
+  weatherPreviewIndex = (weatherPreviewIndex + 1) % WEATHER_PREVIEW_STATES.length;
+  const state = WEATHER_PREVIEW_STATES[weatherPreviewIndex];
+  updateWeatherScene(state.isDay, state.category);
+  const next = WEATHER_PREVIEW_STATES[(weatherPreviewIndex + 1) % WEATHER_PREVIEW_STATES.length];
+  document.getElementById('weatherPreviewBtn').textContent =
+    `▶ showing: ${state.category} · ${state.isDay ? 'day' : 'night'} (next: ${next.category} · ${next.isDay ? 'day' : 'night'})`;
+}
+if(new URLSearchParams(window.location.search).get('debug') === 'weather'){
+  document.getElementById('weatherPreviewBtn').style.display = 'inline-block';
+}
+
 async function loadWeather(){
   try{
     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.18&longitude=136.91&current_weather=true');
     const data = await res.json();
     const temp = Math.round(data.current_weather.temperature);
+    const isDay = data.current_weather.is_day === 1;
     const info = weatherCodeInfo(data.current_weather.weathercode);
-    document.getElementById('weatherIcon').textContent = info.icon;
-    document.getElementById('weatherTemp').textContent = `${temp}°`;
+
+    document.getElementById('weatherCityTemp').textContent = `NAGOYA: ${temp}°`;
+
+    const fallback = document.getElementById('weatherFallback');
+    fallback.textContent = isDay ? info.icon : '🌙';
+    updateWeatherScene(isDay, info.category);
+
+    // temperature drives the slider position — blue/cold on the left,
+    // red/hot on the right. Range is tuned for Nagoya's climate: it can
+    // occasionally dip below freezing in winter and well past 35° in summer.
+    const TEMP_MIN = -5, TEMP_MAX = 38;
+    const tempPercent = Math.max(0, Math.min(100, ((temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * 100));
+    document.getElementById('weatherSliderKnob').style.left = tempPercent + '%';
   }catch(e){ /* weather is a nice-to-have — fail quietly if it doesn't load */ }
 }
 loadWeather();
@@ -474,7 +1659,12 @@ const TRIP_END = new Date('2028-09-29T23:59:59+09:00');
 function updateCountdown(){
   const now = new Date();
   const labelEl = document.getElementById('countdownLabel');
+  const blocksEl = document.getElementById('countdownBlocks');
   const valueEl = document.getElementById('countdownValue');
+  const val1 = document.getElementById('countdownVal1');
+  const val2 = document.getElementById('countdownVal2');
+  const unit1 = document.getElementById('countdownUnit1');
+  const unit2 = document.getElementById('countdownUnit2');
   let target;
 
   if(now < TRIP_START){
@@ -485,9 +1675,14 @@ function updateCountdown(){
     labelEl.textContent = 'left in Japan';
   } else {
     labelEl.textContent = '';
+    blocksEl.style.display = 'none';
+    valueEl.style.display = 'block';
     valueEl.textContent = 'the trip is over 🌸';
     return;
   }
+
+  blocksEl.style.display = 'flex';
+  valueEl.style.display = 'none';
 
   const diffMs = target - now;
   const totalSeconds = Math.floor(diffMs / 1000);
@@ -497,12 +1692,15 @@ function updateCountdown(){
   if(days >= 60){
     const months = Math.floor(days / 30);
     const remDays = days % 30;
-    valueEl.textContent = `${months}mo ${remDays}d`;
+    val1.textContent = months; unit1.textContent = 'months';
+    val2.textContent = remDays; unit2.textContent = 'days';
   } else if(days >= 1){
-    valueEl.textContent = `${days}d ${hours}h`;
+    val1.textContent = days; unit1.textContent = 'days';
+    val2.textContent = hours; unit2.textContent = 'hours';
   } else {
     const mins = Math.floor((totalSeconds % 3600) / 60);
-    valueEl.textContent = `${hours}h ${mins}m`;
+    val1.textContent = hours; unit1.textContent = 'hours';
+    val2.textContent = mins; unit2.textContent = 'minutes';
   }
 }
 updateCountdown();

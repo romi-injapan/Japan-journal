@@ -100,6 +100,12 @@
       <div><label>Tag</label><input type="text" id="f_tag" placeholder="e.g. tokyo"></div>
     </div>
 
+    <label>Basket</label>
+    <select id="f_basket" style="width:100%;padding:10px;border-radius:6px;border:1.5px solid var(--line);font-family:'Work Sans';font-size:14.5px;">
+      <option value="holiday">Holiday</option>
+      <option value="nagoya">Nagoya</option>
+    </select>
+
     <label>Location preset (fills in the map coordinates)</label>
     <select id="f_preset" onchange="applyPreset()" style="width:100%;padding:10px;border-radius:6px;border:1.5px solid var(--line);font-family:'Work Sans';font-size:14.5px;">
       <option value="">— custom / pick manually below —</option>
@@ -201,7 +207,7 @@ async function loadList(){
   el.innerHTML = data.map(e => `
     <div class="entry-row">
       <div>
-        <div class="meta">${e.entry_date} · ${e.tag||''}</div>
+        <div class="meta">${e.entry_date} · ${e.tag||''} · <strong>${e.basket==='holiday' ? 'Holiday' : e.basket==='nagoya' ? 'Nagoya' : 'no basket set'}</strong></div>
         <div class="title">${e.title}</div>
       </div>
       <div class="actions">
@@ -217,6 +223,7 @@ function openForm(){
   document.getElementById('formTitle').textContent = "New entry";
   document.getElementById('deleteBtn').style.display = 'none';
   ['f_title','f_date','f_tag','f_lat','f_lng','f_excerpt','f_photos'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_basket').value = 'holiday';
   document.getElementById('bodyEditor').innerHTML = '';
   document.getElementById('linksWrap').innerHTML = '';
   document.getElementById('saveStatus').textContent = '';
@@ -235,6 +242,7 @@ function editEntry(id){
   document.getElementById('f_title').value = e.title || '';
   document.getElementById('f_date').value = e.entry_date || '';
   document.getElementById('f_tag').value = e.tag || '';
+  document.getElementById('f_basket').value = e.basket || 'holiday';
   document.getElementById('f_lat').value = e.lat ?? '';
   document.getElementById('f_lng').value = e.lng ?? '';
   document.getElementById('f_excerpt').value = e.excerpt || '';
@@ -394,6 +402,7 @@ async function saveEntry(){
     title: document.getElementById('f_title').value,
     entry_date: document.getElementById('f_date').value,
     tag: document.getElementById('f_tag').value,
+    basket: document.getElementById('f_basket').value,
     lat: document.getElementById('f_lat').value ? parseFloat(document.getElementById('f_lat').value) : null,
     lng: document.getElementById('f_lng').value ? parseFloat(document.getElementById('f_lng').value) : null,
     excerpt: document.getElementById('f_excerpt').value,
