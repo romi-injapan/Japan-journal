@@ -610,22 +610,47 @@
     border-radius:999px; letter-spacing:.02em;
   }
 
-  /* Small screens: the fixed 540x400 layout above doesn't fit a phone
-     viewport, so it's scaled down as one rigid unit via transform:scale.
-     This is a uniform zoom, not a re-layout — every element keeps the
-     exact same relative position/size to every other element, nothing
-     reflows or recalculates. margin-bottom compensates for the visual
-     shrink so the surrounding page doesn't leave a gap where the card
-     used to be. Say the word if you'd rather have a second, separately-
-     tuned set of fixed coordinates for phones instead of a scaled clone. */
+  /* Small screens: percentage-based positioning instead of transform:scale.
+     The scale approach visually shrank the whole 540x390 card as one
+     rigid unit, which sounds equivalent to real percentages but wasn't
+     holding up in practice — text/images were overlapping and the
+     highlight/button looked disconnected from the rest of the card.
+     This instead gives every child element its own genuine percentage
+     position (computed directly from the desktop px values ÷ card
+     width/height), so it's correctly proportioned at ANY phone width,
+     not just one assumed scale factor. The card itself uses aspect-ratio
+     instead of a fixed height so it always keeps the same 540:390 shape
+     while flexing to fill the available width. */
   @media (max-width:700px){
-    .basket-boxes{ padding:0 12px; }
+    .basket-boxes{ padding:0 16px; }
     .basket-box{
-      transform:scale(0.62); transform-origin:top center;
-      margin-bottom:-160px;
+      width:100%; max-width:420px; height:auto; aspect-ratio:540/390;
+      margin:0 auto 24px;
     }
-    .basket-box:hover{ transform:scale(0.62) translateY(-6px); }
-    .basket-box:active{ transform:scale(0.62) translateY(-2px); }
+    .basket-box:hover, .basket-box:active{ transform:none; }
+
+    .basket-holiday .basket-box-image{ top:-8.72%; left:-20.37%; width:64.81%; }
+    .basket-nagoya .basket-box-image{ top:-15.38%; right:-22.22%; width:62.04%; }
+
+    .basket-box-content{ top:8.21%; width:46.48%; height:56.41%; gap:3px; }
+    .basket-holiday .basket-box-content{ left:48.70%; }
+    .basket-nagoya .basket-box-content{ left:4.81%; }
+
+    .basket-box-title{ font-size:24px; }
+    .basket-box-sub{ font-size:12.5px; line-height:1.4; }
+    .basket-box-count{ font-size:9px; padding:3px 8px; }
+
+    .basket-box-highlight{
+      top:66.67%; left:4.81%; width:56.30%; height:25.64%;
+      padding:6px 10px; gap:6px;
+    }
+    .basket-box-highlight-icon{ font-size:15px; }
+    .basket-box-highlight-label{ font-size:9px; }
+    .basket-box-highlight-text{ font-size:11px; line-height:1.2; }
+
+    .basket-box-btn{
+      top:74.36%; left:64.07%; width:31.11%; height:9.23%; font-size:11px;
+    }
   }
 
   /* ---------- basket view (map/timeline for one basket) ---------- */
@@ -688,6 +713,19 @@
   overflow:hidden;
 }
 
+/* Between 600-980px the frame is fluid (see the rule above) but was still
+   using these same desktop insets, which don't necessarily line up with
+   the border once the frame's own proportions are different from its
+   fixed-desktop size. Tune these numbers specifically for that range. */
+@media (max-width:980px){
+  #map{
+    left:8%;
+    top:14%;
+    width:82%;
+    height:72%;
+  }
+}
+
 .map-caption{
   text-align:center;
   font-size:15px;
@@ -700,7 +738,7 @@
 @media (max-width:600px){
   .entry-title, .entry-detail .entry-title{ font-size:24px; max-width:100%; }
   .entry-excerpt{ max-width:100%; }
-  .frame-overlay{ display:none; }
+  .map-photo-frame .frame-overlay{ display:none; } /* matches the 2-class specificity of the rule that shows it — a plain .frame-overlay selector here can never win against that, regardless of source order */
   .map-photo-frame{ height:auto; padding-bottom:0; }
   #map{ position:static; height:320px; width:100%; left:0; top:0; }
 }
