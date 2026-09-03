@@ -237,10 +237,9 @@
   .side-stack{ display:flex; flex-direction:column; gap:40px; }
   @media (max-width:980px){
     .combined-layout{ grid-template-columns:1fr; }
-    /* Below this width there's no spare column to bleed into, so the frame
-       goes back to being responsive (scales with viewport) instead of a
-       fixed 750px, which would otherwise overflow a phone screen. */
-    .map-photo-frame{ width:100%; height:0; padding-bottom:54.533%; margin:0 auto 10px; left:0; top:0; }
+    /* the .map-photo-frame mobile override lives right after its base
+       rule further down this file — CSS requires that ordering for it to
+       actually take effect, so don't duplicate it here */
   }
   .panel{
     /* Same translucent glass treatment as the clock/weather/countdown
@@ -555,7 +554,7 @@
   .basket-holiday .basket-box-image{ top:-34px; left:-110px; width:350px; }
 
   /* Nagoya image — fixed position + fixed width, independent of Holiday (mirrored via "right") */
-  .basket-nagoya .basket-box-image{ top:-60px; right:-120px; width:380px; }
+  .basket-nagoya .basket-box-image{ top:-60px; right:-120px; width:335px; }
 
   /* Text block: fixed top/width/height so it can never grow into the
      image or into the highlight/button row below. Long text is clipped
@@ -655,6 +654,19 @@
   height:609px; /* MAP_H = MAP_W * 0.54533, the frame artwork's aspect ratio */
 }
 
+/* This MUST come after the fixed-size rule above, not before it — CSS
+   resolves ties between equal-specificity rules by source order, so a
+   media query placed earlier in the file loses to a later plain rule even
+   when the media query's condition is true. That's exactly what was
+   happening here: this override existed elsewhere in the stylesheet but
+   above the base rule, so the fixed 890px width was silently winning at
+   every screen size, phones included. */
+@media (max-width:980px){
+  .map-photo-frame{
+    width:100%; left:0; top:0; height:0; padding-bottom:54.533%;
+  }
+}
+
 .map-photo-frame .frame-overlay{
   position:absolute;
   inset:0;
@@ -690,7 +702,7 @@
   .entry-excerpt{ max-width:100%; }
   .frame-overlay{ display:none; }
   .map-photo-frame{ height:auto; padding-bottom:0; }
-  #map{ position:static; height:320px; }
+  #map{ position:static; height:320px; width:100%; left:0; top:0; }
 }
 
 @media (min-width:1600px){
@@ -1240,7 +1252,7 @@ function enterBasket(basket){
   renderTimeline();
   renderGallery();
   if(window._maplibreMap){ addMarkers(); } else { initMap(); }
-  setTimeout(()=>{ if(window._maplibreMap) window._maplibreMap.resize(); }, 60);
+  setTimeout(()=>{ if(window._maplibreMap) window._maplibreMap.resize(); }, 150);
   setNavActive(basket);
 }
 function showLanding(){
@@ -1529,8 +1541,20 @@ function initMap(){
   });
   window._maplibreMap = map;
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-  map.on('load', addMarkers);
+  map.on('load', () => {
+    map.resize(); // container size can still shift after construction (fonts/images loading) — resize once load fires as a safety net
+    addMarkers();
+  });
 }
+
+// Any later layout shift — phone rotated, a webfont finishes loading and
+// reflows the page, browser chrome (address bar) showing/hiding on mobile
+// Safari — re-syncs the map canvas to whatever size its container actually
+// ends up being, rather than staying locked to whatever size it happened
+// to measure at construction time.
+window.addEventListener('resize', () => {
+  if(window._maplibreMap) window._maplibreMap.resize();
+});
 
 function addMarkers(){
   const map = window._maplibreMap;
