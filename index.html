@@ -230,7 +230,7 @@
 
   /* ---------- combined journal + map + gallery layout ---------- */
   .combined-layout{
-    display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start;
+    display:grid; grid-template-columns:2fr 3fr; gap:28px; align-items:start;
   }
   /* This 40px gap is the whitespace between the map's bottom edge and the
      gallery's top edge — bump this one number to adjust that spacing. */
@@ -275,7 +275,7 @@
   .journal-list{ max-height:960px; overflow-y:auto; padding-right:6px; }
   .journal-list .entry-card{ width:100%; }
 
-  .gallery-panel{ height:480px; width:810px; position:relative; top:-50px ;left:25px; }
+  .gallery-panel{ height:480px; width:100%; position:relative; top:0; left:0; }
   .gallery-grid{
     display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;
     max-height:380px; overflow-y:auto; padding-right:2px;
@@ -673,10 +673,11 @@
 
 .map-photo-frame{
   position:relative;
-  left:-10px;
-  top:-40px;
-  width:890px;  /* MAP_W */
-  height:609px; /* MAP_H = MAP_W * 0.54533, the frame artwork's aspect ratio */
+  left:0;
+  top:0;
+  width:100%;   /* fills its grid column exactly (now 60% of combined-layout) instead of a fixed px bleed */
+  height:0;
+  padding-bottom:54.533%; /* preserves the frame artwork's aspect ratio at any width */
 }
 
 /* This MUST come after the fixed-size rule above, not before it — CSS
