@@ -322,8 +322,12 @@
   /* The 950px/1200px fixed heights above only make sense at desktop width
      — on a phone they either massively stretch the frame artwork (since
      width shrinks to ~350px but height stays 950px) or waste huge amounts
-     of vertical space. This restores the frame's real aspect ratio and
-     lets the journal list size itself to content instead. */
+     of vertical space. Below, the frame gets the exact same two-tier
+     treatment as the Holiday/Nagoya pages' own map — aspect-ratio sized
+     between 600-980px, then hidden entirely under 600px (matching the
+     rules further down this file) — so the Map page's mobile map always
+     looks identical in size to every other page's map, one shared
+     behavior instead of a separately-tuned value to keep in sync. */
   @media (max-width:980px){
     #basketView.mode-map-only .map-photo-frame{
       width:100%; height:0; padding-bottom:54.533%;
@@ -334,6 +338,10 @@
     #basketView.mode-map-only .journal-list{
       max-height:60vh;
     }
+  }
+  @media (max-width:600px){
+    #basketView.mode-map-only .map-photo-frame .frame-overlay{ display:none; }
+    #basketView.mode-map-only .map-photo-frame{ height:auto; padding-bottom:0; }
   }
 
   /* ---------- PHOTO GALLERY nav link: Gallery only, Journal + Map hidden ---------- */
