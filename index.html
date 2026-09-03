@@ -272,7 +272,7 @@
   .journal-controls select:focus, .journal-controls input:focus{ outline:2px solid var(--indigo); outline-offset:1px; }
 
   .journal-panel{ height:1080px; }
-  .journal-list{ max-height:960px; overflow-y:auto; padding-right:6px; }
+  .journal-list{ max-height:960px; overflow-y:auto; padding-right:6px; padding-bottom:24px; }
   .journal-list .entry-card{ width:100%; }
 
   .gallery-panel{ height:480px; width:100%; position:relative; top:0; left:0; }
@@ -847,8 +847,8 @@
     padding:24px 30px; margin:0 auto 22px; position:relative; overflow:hidden;
     box-shadow:0 2px 10px rgba(30,58,79,0.04);
     cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;
-    width:80%;
-    height:200px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center;
+    width:74%;
+    height:200px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
   }
   .entry-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,58,79,0.09); }
   .entry-card .stamp{
