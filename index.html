@@ -329,8 +329,9 @@
      looks identical in size to every other page's map, one shared
      behavior instead of a separately-tuned value to keep in sync. */
   @media (max-width:980px){
+    #basketView.mode-map-only .map-filter-tabs{ margin-bottom:16px; }
     #basketView.mode-map-only .map-photo-frame{
-      width:100%; height:0; padding-bottom:54.533%;
+      width:100%; height:0; padding-bottom:54.533%; margin-bottom:24px;
     }
     #basketView.mode-map-only .journal-panel{
       height:auto;
@@ -340,8 +341,10 @@
     }
   }
   @media (max-width:600px){
+    #basketView.mode-map-only .map-filter-tabs{ margin-bottom:16px; }
     #basketView.mode-map-only .map-photo-frame .frame-overlay{ display:none; }
-    #basketView.mode-map-only .map-photo-frame{ height:auto; padding-bottom:0; }
+    #basketView.mode-map-only .map-photo-frame{ height:auto; padding-bottom:0; margin-bottom:0; }
+    #basketView.mode-map-only #map{ margin-bottom:24px; }
   }
 
   /* ---------- PHOTO GALLERY nav link: Gallery only, Journal + Map hidden ---------- */
@@ -1301,11 +1304,13 @@ function enterBasket(basket){
   if(window._maplibreMap){ addMarkers(); } else { initMap(); }
   setTimeout(()=>{ if(window._maplibreMap) window._maplibreMap.resize(); }, 150);
   setNavActive(basket);
+  window.scrollTo(0, 0);
 }
 function showLanding(){
   currentBasket = null;
   showSection('landing');
   setNavActive('home');
+  window.scrollTo(0, 0);
 }
 
 /* ---------------- gate — real login via Supabase ---------------- */
