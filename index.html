@@ -152,12 +152,6 @@
   .clock-hand{ position:absolute; left:50%; top:50%; width:auto; }
   #jstHour{ height:30%; transform-origin:49.42% 85.00%; }
   #jstMinute{ height:42%; transform-origin:49.21% 87.00%; }
-  .icon-box{
-    width:56px; height:56px; display:flex; align-items:center; justify-content:center;
-    background:rgba(255,255,255,0.55); border-radius:14px; box-shadow:inset 0 2px 4px rgba(30,58,79,0.06);
-    position:relative; z-index:1;
-  }
-  .widget-icon{ font-size:28px; line-height:1; }
   .widget-label{
     font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:700;
     position:relative; z-index:1;
@@ -351,7 +345,7 @@
     }
   }
   #basketView.mode-map-only .side-stack{
-    order:-1; /* TEST: map first at every width again (reorder change removed) — checking if min-width:0 alone was the actual fix */
+    order:-1; /* map (+ filter tabs) render first at every screen width, journal entries follow below */
   }
   #basketView.mode-map-only .journal-panel{
     width:100%; height:1080px;
@@ -490,12 +484,6 @@
   }
   .itinerary-row:hover{ transform:translateX(4px); box-shadow:0 6px 16px rgba(30,58,79,0.08); }
   .itinerary-date{ font-family:'Shadows Into Light', cursive; color:var(--persimmon); font-size:18px; width:88px; flex-shrink:0; }
-  .itinerary-badge{
-    font-size:9.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px;
-    border-radius:999px; flex-shrink:0;
-  }
-  .itinerary-badge.holiday{ background:rgba(201,123,74,0.15); color:var(--persimmon); }
-  .itinerary-badge.nagoya{ background:rgba(124,139,110,0.15); color:var(--moss); }
   .itinerary-title{ font-family:'Instrument Serif', serif; font-style:italic; font-size:22px; color:var(--indigo-deep); flex:1; }
   .itinerary-tag{ font-size:15px; color:var(--ink-soft); flex-shrink:0; }
 
@@ -774,15 +762,6 @@
     width:82%;
     height:72%;
   }
-}
-
-.map-caption{
-  text-align:center;
-  font-size:15px;
-  color:var(--ink-soft);
-  margin-top:14px;
-  font-style:italic;
-  font-family:'Instrument Serif', serif;
 }
 
 @media (max-width:600px){
@@ -1303,9 +1282,7 @@ function showSection(section){
    default) and then scroll to that section within it. */
 function goToSection(target){
   if(target === 'home'){
-    currentBasket = null;
-    showSection('landing');
-    setNavActive('home');
+    showLanding();
     return;
   }
   if(target === 'itinerary'){
