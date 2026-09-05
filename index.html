@@ -350,10 +350,8 @@
       max-width:1350px; margin:0 auto; /* desktop only — this page's map is intentionally bigger than Holiday/Nagoya's 60% column */
     }
   }
-  @media (min-width:981px){
-    #basketView.mode-map-only .side-stack{
-      order:-1; /* desktop only: map (+ filter tabs) render first, journal entries follow below */
-    }
+  #basketView.mode-map-only .side-stack{
+    order:-1; /* TEST: map first at every width again (reorder change removed) — checking if min-width:0 alone was the actual fix */
   }
   #basketView.mode-map-only .journal-panel{
     width:100%; height:1080px;
