@@ -151,12 +151,27 @@
 
   /* Phone: widgets shrink instead of just stacking at full desktop size —
      otherwise you have to scroll a long way past three full-height cards
-     just to reach the actual content below. */
+     just to reach the actual content below. Small enough that all three
+     fit side-by-side on one row instead of wrapping to separate lines. */
   @media (max-width:700px){
-    .widget{ width:150px; padding:14px 16px 10px; gap:10px; }
-    .weather-scene{ height:110px; }
-    .countdown-scene{ height:110px; margin:-14px -16px 0; }
-    .clock-widget-face{ width:100px; height:100px; }
+    .widgets{ gap:8px; }
+    .widget{ width:31%; min-width:0; padding:10px 10px 8px; gap:6px; box-sizing:border-box; }
+    .weather-scene{ height:68px; }
+    .countdown-scene{ height:68px; margin:-10px -10px 0; }
+    .clock-widget-face{ width:62px; height:62px; }
+
+    .widget-label{ font-size:9px; }
+    .widget-clock .widget-label{ font-size:13px; }
+    .widget-weather .widget-label{ font-size:14px; }
+    .widget-countdown .widget-label{ font-size:12px; }
+    .widget-sub{ font-size:9px; }
+    #jstClock{ padding:5px 12px; font-size:15px; }
+
+    .flip-row{ gap:4px; margin-top:-6px; }
+    .flip-col{ gap:4px; }
+    .flip-block{ padding:3px 6px; min-width:24px; border-radius:6px; }
+    .flip-value{ font-size:15px; }
+    .flip-label{ font-size:6px; }
   }
   .clock-hand{ position:absolute; left:50%; top:50%; width:auto; }
   #jstHour{ height:30%; transform-origin:49.42% 85.00%; }
@@ -318,10 +333,14 @@
   #basketView.mode-map-only .map-panel{
     width:100%;
   }
-  #basketView.mode-map-only .map-photo-frame{
-    position:relative; left:0; top:0;
-    width:100%; height:950px;
-  }
+  /* .map-photo-frame itself is intentionally NOT overridden here anymore —
+     the shared base rule (search "fills its grid column exactly" further
+     down this file) is already width:100% + aspect-ratio at every screen
+     size, which is exactly right here too. This page's column is simply
+     wider (max-width:1350px, single column) than the regular Holiday/
+     Nagoya 60% column, so the map naturally renders bigger — no separate
+     fixed-height value to keep in sync, and no risk of it ever drifting
+     out of alignment with how every other page's map behaves. */
   #basketView.mode-map-only .journal-panel{
     width:100%; height:1080px;
   }
@@ -329,20 +348,9 @@
     max-height:980px;
   }
 
-  /* The 950px/1200px fixed heights above only make sense at desktop width
-     — on a phone they either massively stretch the frame artwork (since
-     width shrinks to ~350px but height stays 950px) or waste huge amounts
-     of vertical space. Below, the frame gets the exact same two-tier
-     treatment as the Holiday/Nagoya pages' own map — aspect-ratio sized
-     between 600-980px, then hidden entirely under 600px (matching the
-     rules further down this file) — so the Map page's mobile map always
-     looks identical in size to every other page's map, one shared
-     behavior instead of a separately-tuned value to keep in sync. */
   @media (max-width:980px){
     #basketView.mode-map-only .map-filter-tabs{ margin-bottom:16px; }
-    #basketView.mode-map-only .map-photo-frame{
-      width:100%; height:0; padding-bottom:54.533%; margin-bottom:24px;
-    }
+    #basketView.mode-map-only .map-photo-frame{ margin-bottom:24px; } /* spacing only — size comes from the shared rule */
     #basketView.mode-map-only .journal-panel{
       height:auto;
     }
@@ -352,9 +360,7 @@
   }
   @media (max-width:600px){
     #basketView.mode-map-only .map-filter-tabs{ margin-bottom:16px; }
-    #basketView.mode-map-only .map-photo-frame .frame-overlay{ display:none; }
-    #basketView.mode-map-only .map-photo-frame{ height:auto; padding-bottom:0; margin-bottom:0; }
-    #basketView.mode-map-only #map{ margin-bottom:24px; }
+    #basketView.mode-map-only #map{ margin-bottom:24px; } /* spacing only */
   }
 
   /* ---------- PHOTO GALLERY nav link: Gallery only, Journal + Map hidden ---------- */
