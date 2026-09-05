@@ -262,6 +262,15 @@
   .combined-layout{
     display:grid; grid-template-columns:2fr 3fr; gap:28px; align-items:start;
   }
+  /* Grid items default to min-width:auto (NOT 0), meaning they refuse to
+     shrink below their content's natural minimum size — even when you've
+     explicitly given them width:100% or a grid-template-columns fraction.
+     If anything inside journal-panel or side-stack (a long line of text,
+     a map canvas, an image) has a large intrinsic minimum width, this
+     default can silently force the whole column wider than intended,
+     with nothing to stop it since .wrap has no overflow:hidden of its
+     own. min-width:0 removes that hidden floor. */
+  .journal-panel, .side-stack{ min-width:0; }
   /* This 40px gap is the whitespace between the map's bottom edge and the
      gallery's top edge — bump this one number to adjust that spacing. */
   .side-stack{ display:flex; flex-direction:column; gap:40px; }
@@ -341,8 +350,10 @@
       max-width:1350px; margin:0 auto; /* desktop only — this page's map is intentionally bigger than Holiday/Nagoya's 60% column */
     }
   }
-  #basketView.mode-map-only .side-stack{
-    order:-1; /* map (+ filter tabs) render first, journal entries follow below */
+  @media (min-width:981px){
+    #basketView.mode-map-only .side-stack{
+      order:-1; /* desktop only: map (+ filter tabs) render first, journal entries follow below */
+    }
   }
   #basketView.mode-map-only .journal-panel{
     width:100%; height:1080px;
