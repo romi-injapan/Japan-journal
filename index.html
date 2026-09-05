@@ -704,7 +704,15 @@
 /* ---------- map: keeps its own picture-frame look, no card background behind it ---------- */
 .map-panel{
   background:none; border:none; box-shadow:none; padding:0;
-  overflow:visible; /* .panel sets overflow:hidden by default — undo that so the frame can bleed past the column edge */
+  /* overflow:visible removed — this was needed for the OLD .map-photo-frame
+     design (which bled left:-10px/top:-40px past its column intentionally),
+     but that bleed no longer exists since the frame became fully fluid
+     (width:100%) after the 60/40 split. Left in place, it was letting any
+     marker positioned outside the visible map area (e.g. Tokyo, on the
+     combined "all" view, which spans a much wider geographic area than a
+     narrow phone's aspect ratio can comfortably fit) render uncropped and
+     escape to the side, instead of being clipped like everything else.
+     Falls back to .panel's own overflow:hidden default now. */
 }
 .map-panel::before{ display:none; } /* no sheen either — this section isn't a card */
 
