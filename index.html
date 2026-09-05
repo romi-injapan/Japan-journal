@@ -1629,6 +1629,21 @@ function initMap(){
     map.resize(); // container size can still shift after construction (fonts/images loading) — resize once load fires as a safety net
     addMarkers();
   });
+
+  // Belt-and-suspenders fix for the map overflowing its container on some
+  // phones: MapLibre draws to a <canvas>, which does NOT resize itself —
+  // it only updates when .resize() is explicitly called. Every fix so far
+  // relied on guessing the right MOMENT to call it (a timeout, a window
+  // resize event) — but if the container's real size isn't settled yet
+  // at exactly one of those guessed moments, the canvas gets stuck wrong
+  // and nothing ever corrects it afterward. A ResizeObserver removes the
+  // guesswork entirely: it fires automatically every single time #map's
+  // actual rendered size changes, for ANY reason, guaranteeing the canvas
+  // can never permanently drift out of sync with its container again.
+  const mapEl = document.getElementById('map');
+  if(mapEl && 'ResizeObserver' in window){
+    new ResizeObserver(() => { map.resize(); }).observe(mapEl);
+  }
 }
 
 // Any later layout shift — phone rotated, a webfont finishes loading and
