@@ -149,30 +149,6 @@
   .clock-widget-face{ width:150px; height:150px; position:relative; z-index:1; margin:0 auto; }
   .clock-face-img{ width:100%; height:100%; display:block; }
 
-  /* Phone: widgets shrink instead of just stacking at full desktop size —
-     otherwise you have to scroll a long way past three full-height cards
-     just to reach the actual content below. Small enough that all three
-     fit side-by-side on one row instead of wrapping to separate lines. */
-  @media (max-width:700px){
-    .widgets{ gap:8px; }
-    .widget{ width:31%; min-width:0; padding:10px 10px 8px; gap:6px; box-sizing:border-box; }
-    .weather-scene{ height:68px; }
-    .countdown-scene{ height:68px; margin:-10px -10px 0; }
-    .clock-widget-face{ width:62px; height:62px; }
-
-    .widget-label{ font-size:9px; }
-    .widget-clock .widget-label{ font-size:13px; }
-    .widget-weather .widget-label{ font-size:14px; }
-    .widget-countdown .widget-label{ font-size:12px; }
-    .widget-sub{ font-size:9px; }
-    #jstClock{ padding:5px 12px; font-size:15px; }
-
-    .flip-row{ gap:4px; margin-top:-6px; }
-    .flip-col{ gap:4px; }
-    .flip-block{ padding:3px 6px; min-width:24px; border-radius:6px; }
-    .flip-value{ font-size:15px; }
-    .flip-label{ font-size:6px; }
-  }
   .clock-hand{ position:absolute; left:50%; top:50%; width:auto; }
   #jstHour{ height:30%; transform-origin:49.42% 85.00%; }
   #jstMinute{ height:42%; transform-origin:49.21% 87.00%; }
@@ -210,6 +186,35 @@
   }
   .flip-value{ font-family:'Instrument Serif', serif; font-style:normal; font-weight:600; font-size:26px; line-height:1; }
   .flip-label{ font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:#5A4038; opacity:0.85; line-height:1; }
+
+  /* Phone: widgets shrink instead of just stacking at full desktop size —
+     otherwise you have to scroll a long way past three full-height cards
+     just to reach the actual content below. Small enough that all three
+     fit side-by-side on one row instead of wrapping to separate lines.
+     This block MUST come after all the base widget rules above it —
+     equal-specificity selectors resolve ties by source order, so placing
+     this earlier (as it was before) meant the larger base font-sizes won
+     regardless of screen width. */
+  @media (max-width:700px){
+    .widgets{ gap:8px; }
+    .widget{ width:31%; min-width:0; padding:10px 10px 8px; gap:6px; box-sizing:border-box; }
+    .weather-scene{ height:68px; }
+    .countdown-scene{ height:68px; margin:-10px -10px 0; }
+    .clock-widget-face{ width:62px; height:62px; }
+
+    .widget-label{ font-size:9px; }
+    .widget-clock .widget-label{ font-size:13px; }
+    .widget-weather .widget-label{ font-size:14px; }
+    .widget-countdown .widget-label{ font-size:12px; }
+    .widget-sub{ font-size:9px; }
+    #jstClock{ padding:5px 12px; font-size:15px; }
+
+    .flip-row{ gap:4px; margin-top:-6px; }
+    .flip-col{ gap:4px; }
+    .flip-block{ padding:3px 6px; min-width:24px; border-radius:6px; }
+    .flip-value{ font-size:15px; }
+    .flip-label{ font-size:6px; }
+  }
 
   /* ---------- site-wide nav (Home | Itinerary | Map | Photo Gallery) ---------- */
   .site-nav{
@@ -325,7 +330,12 @@
      both at the same centered width. Gallery is hidden entirely. ---------- */
   #basketView.mode-map-only .gallery-panel{ display:none; }
   #basketView.mode-map-only .combined-layout{
-    grid-template-columns:1fr; max-width:1350px; margin:0 auto;
+    grid-template-columns:1fr; /* single column at every width — map on top, journal below */
+  }
+  @media (min-width:981px){
+    #basketView.mode-map-only .combined-layout{
+      max-width:1350px; margin:0 auto; /* desktop only — on mobile this now falls through to nothing extra, matching exactly how Holiday/Nagoya's own mobile layout behaves (no separate max-width/margin override there either) */
+    }
   }
   #basketView.mode-map-only .side-stack{
     order:-1; /* map first, journal entries follow below it */
